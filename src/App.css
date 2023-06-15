@@ -36,3 +36,52 @@
     transform: rotate(360deg);
   }
 }
+
+
+.solved-arr-element{
+  width: 20px;
+  height: 20px;
+  margin: 2px;
+  border: 2px solid greenyellow;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.problem-arr-element{
+  width: 20px;
+  height: 20px;
+  margin: 2px;
+  border: 2px solid red;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.chart{
+  width: auto;
+}
+
+.chart:focus{
+  border: 1px solid black;
+
+}
+
+/* .node{
+  animation-name: append;
+  animation-duration: .2s;
+}
+
+@keyframes append {
+  from{
+    transform: scale(0);
+  }
+
+  to{
+    transform: scale(1);
+  }
+  
+} */
