@@ -183,7 +183,6 @@ function refinement(tree, slope){
         // callback(pointer);
         current.y = parentY + slope;
         if(map.get(current.data.id)){
-            console.log("first")
             let prev = map.get(current.data.id);
             let newValue = [((prev.x+current.x)/2), prev.y > current.y ? prev.y:current.y];
             current.display = "none";

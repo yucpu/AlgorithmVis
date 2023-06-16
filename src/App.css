@@ -70,18 +70,8 @@
 
 }
 
-/* .node{
-  animation-name: append;
-  animation-duration: .2s;
+.gnode{
+  
+  transform-origin: 0 0;
 }
 
-@keyframes append {
-  from{
-    transform: scale(0);
-  }
-
-  to{
-    transform: scale(1);
-  }
-  
-} */

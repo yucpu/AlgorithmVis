@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import {select, tree, linkVertical, hierarchy, zoom, zoomTransform, transition,easeLinear, selection} from 'd3';
+import {select, tree, linkVertical, hierarchy, zoom, zoomTransform, transition, easeLinear,} from 'd3';
 import './App.css';
 import AArray from './AArray';
 import SvgArray from './svgArray';
@@ -8,24 +8,22 @@ import { treeNode, GetUniqueID, splitNArray, depth, treeLayout,refinement} from 
 
 
 const data = [{key:"key3",value:3},{key:"key2",value:2},{key:"key9",value:1},{key:"key4",value:4},{key:"key19",value:19}];
+
 const myTree = new treeNode(data, GetUniqueID());
 
 function App() {
   const selfRef = useRef(null);
-  const arrRefs = useRef([]);
   const nodeTransition = transition().duration(300).ease(easeLinear);
-  // let [data,setData] = useState([{key:"key3",value:3},{key:"key2",value:2},{key:"key9",value:1},{key:"key4",value:4},{key:"key19",value:19}])
-  // const myTree = new treeNode(data, GetUniqueID());
   let [nodes, setNodes] = useState(1); 
   let [selected, setSelect] = useState([]); 
   let [clickAmount, setClick] = useState(0);
-  let [zoomState, setZoom] = useState({k:1, x:0, y:0});
-  
+  let [zoomState, setZoom] = useState({k:1, x:0, y:10});
   
      
 
   // },[])
   useEffect(() => {
+   
     const app = select(selfRef.current);
     const svg = app.select("svg");
     const svgZoom = zoom().on("zoom",()=>{zoomHandler(svg)});
@@ -33,7 +31,6 @@ function App() {
     const linkGenerator = linkVertical().x(node=>node.x).y(node=>node.y);
     // treeLayout(myTree,500,200);
     const root = hierarchy(myTree);
-    
     d3treeLayout(root);
     refinement(root, 100);
     // svg.selectAll('g').remove();
@@ -41,18 +38,16 @@ function App() {
 
     svg.select('g').attr("transform", "translate(" + zoomState.x + "," + zoomState.y + ") scale("+zoomState.k+")");
 
-    svg.select("g").selectAll(".node")
+    svg.select("g").selectAll(".gnode")
     .data(root.descendants())
-    .join(appendNode, updateNode, removeNode)
-    .classed("node",true)
-
+    .join(appendNode2, updateNode2, removeNode)
+    
 
     // svg.select('g').selectAll(".link").remove();
     svg.select("g").selectAll(".link").data(root.links())
     .join((enter)=>appendLink(enter, linkGenerator),
       (update)=>updateLink(update, linkGenerator),
       exit=>exit)
-
     
   },[nodes,selected])
 
@@ -63,25 +58,101 @@ function App() {
    * @returns 
    */
   function appendNode(enter){
-    console.log(enter);
     return enter
     .append('g')
     .classed('gnode',true)
     .append("circle")
-    .attr("cx", d => d.x)
+    .attr("cx", d =>d.x)
     .attr("cy", d=>d.y)
-    .attr("r",(d)=>{console.log(d); return 10})
+    .attr("r",(d)=>10)
     .attr("fill","white")
     .style("display",function(d){if(d.display){return d.display}})
     .attr("stroke","green")
-    .on("click",(event,data)=>{clickHandler(event,data)})
-    
+    .on("click",(event,data)=>{console.log(data);clickHandler(event,data)})
+    .attr("r", `0`)
     .transition(nodeTransition)
-    
+    .attr("r", `10`)
+    .selection()
+
   }
 
+  function appendNode2(enter){
+    return enter
+    .append('g')
+    .classed('gnode', true)
+    .attr("transform", (d)=>`translate(${d.x - d.data.node.length*20 / 2},${d.y}) scale(0)`)
+    .on("click",(event,data)=>{clickHandler(event,data)})
+    .transition(nodeTransition)
+    .attr("transform", (d)=>`translate(${d.x - d.data.node.length*20 / 2},${d.y}) scale(1)`)
+    .selection()
+    .selectAll('.element')
+    .data(function(d){console.log(d.data.node); return d.data.node;})
+    .join((enter)=>appendElement(enter),updateElement, removeElement);
+
+  }
+
+  function updateNode2(update){
+    console.log("update here")
+    update
+    .attr("transform", (d)=>`translate(${d.x - d.data.node.length*20 / 2},${d.y}) scale(1)`)
+    .on("click",(event,data)=>{clickHandler(event,data)})
+    return;
+  }
+
+  /**
+   * 
+   * @param {function} enter d3 enter function
+   */
+  function appendElement(enter, i){
+    
+    let tmp = enter
+    .append('g')
+    .attr("transform", (d,i)=>`translate(${20*i},${0})`)
+    .classed('element',true);
+
+    tmp
+    .append('rect')
+    .attr('fill',"none")
+    .attr("stroke",'green')
+    .attr('x',0)
+    .attr('width', 20)
+    .attr('height', 20)
+   
+    tmp.append('text')
+    .attr('fontSize', 16)
+    .attr('x', 10)
+    .attr('y',10)
+    .attr('dominant-baseline', 'middle')
+    .attr('text-anchor','middle')
+    .text(function(d){return d.value})
+    
+    return;
+
+    // end here
+  }
+
+  /**
+   * 
+   * @param {function} update d3 join update function
+   */
+  function updateElement(update){
+
+  }
+
+  /**
+   * 
+   * @param {function} exit d3 exit function
+   */
+  function removeElement(exit){
+    return exit;
+  }
+
+
   function updateNode(update){
-    return update.attr("cx", d=>d.x).attr("cy", d=>d.y);
+    return update
+    .attr("cx", d=>d.x)
+    .attr("cy", d=>d.y)
+    .on("click",(event,data)=>{clickHandler(event,data)});
   }
 
   function removeNode(exit){
@@ -89,8 +160,18 @@ function App() {
   }
 
   function appendLink(enter, linkGenerator){
-    return enter.append("path").classed("link",true).attr("fill","none").attr("stroke","black").attr("d", linkGenerator);
- 
+    
+    enter.
+    append("path")
+    .classed("link",true)
+    .attr("fill","none")
+    .attr("stroke","black")
+    .attr("d", linkGenerator)
+    .style("opacity",`0`)
+    .transition(nodeTransition)
+    .style("opacity",`1`)
+    .selection();
+    return;
   }
 
   function updateLink(update, linkGenerator){
@@ -106,19 +187,15 @@ function App() {
   }
 
   function clickHandler(event,data){
+    console.log(selected);
     if(event.ctrlKey){
       console.log("Multi-Select Event");
-      console.log(selected);
       setSelect([...selected, data]);
     }else{
-      console.log(data.data.node);
+    
       setSelect([data]);
     }
     
-  }
-
-  function clickExp(event){
-    setClick(clickAmount+1);
   }
 
 
@@ -144,7 +221,6 @@ function App() {
       let targetNode = item.data;
       let targetTree = myTree.find(targetNode);
       let nodeData = targetNode.node;
-      
       childTree.node = [...childTree.node, ...nodeData];
       targetTree.setChild(childTree);
     
@@ -159,7 +235,7 @@ function App() {
       let targetNode = item.data;
       // finding node in the tree
       let targetTree = myTree.find(targetNode);
-      console.log(targetTree);
+      console.log(myTree.id);
       let nodeData = targetNode.node;
       // sort treeData by value;
       let chunks = splitNArray(nodeData,2);
