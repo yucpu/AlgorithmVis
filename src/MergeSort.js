@@ -1,9 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { select, tree, linkVertical, hierarchy, zoom, zoomTransform, transition, easeLinear, max, } from 'd3';
 import './App.css';
-import AArray from './AArray';
-import SvgArray from './svgArray';
-import ATree from './ATree';
 import { treeNode, GetUniqueID, splitNArray, getNodesAt, refinement, depth, splitByParentID, treeLayout } from './util';
 
 
@@ -19,7 +16,7 @@ const data = [{ key: "key3", value: 3 },
 
 const myTree = new treeNode(data, GetUniqueID(), null);
 
-function App() {
+function MergeSort() {
   const selfRef = useRef(null);
   const nodeTransition = transition().duration(200).ease(easeLinear);
   let mergeQueue = useRef([]);
@@ -40,17 +37,14 @@ function App() {
   },[maxDepth.current])
 
   useEffect(() => {
-   
     const app = select(selfRef.current);
     const svg = app.select("svg");
     const svgZoom = zoom().on("zoom", () => { zoomHandler(svg) });
     const d3treeLayout = tree().size([500, 200]);
     const linkGenerator = linkVertical().source(d => sourceRefine(d)).target(d => targetRefine(d));
-    // treeLayout(myTree,500,200);
     const root = hierarchy(myTree);
     d3treeLayout(root);
     refinement(root, 100);
-    // svg.selectAll('g').remove();
     svg.call(svgZoom).on("dblclick.zoom", null);
 
     svg.select('g').attr("transform", "translate(" + zoomState.x + "," + zoomState.y + ") scale(" + zoomState.k + ")");
@@ -62,8 +56,6 @@ function App() {
       .data(d => d.data.elements, function (d) { return d.value }) // correct version 
       .join(appendElement, updateElement, removeElement)
 
-
-    // svg.select('g').selectAll(".link").remove();
     svg.select("g").selectAll(".link").data(root.links())
       .join((enter) => appendLink(enter, linkGenerator),
         (update) => updateLink(update, linkGenerator),
@@ -429,4 +421,4 @@ function App() {
   );
 }
 
-export default App;
+export default MergeSort;
