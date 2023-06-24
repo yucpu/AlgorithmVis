@@ -1,55 +1,87 @@
-import { useEffect, useRef, useState } from 'react';
-import {select, tree, linkVertical, hierarchy, zoom, zoomTransform, transition, easeLinear,} from 'd3';
+import { useEffect, useReducer, useRef, useState } from 'react';
+import { select, tree, linkVertical, hierarchy, zoom, zoomTransform, transition, easeLinear, max, } from 'd3';
 import './App.css';
 import AArray from './AArray';
 import SvgArray from './svgArray';
 import ATree from './ATree';
-import { treeNode, GetUniqueID, splitNArray, depth, treeLayout,refinement} from './util';
+import { treeNode, GetUniqueID, splitNArray, getNodesAt, refinement, depth, splitByParentID, treeLayout } from './util';
 
 
-const data = [{key:"key3",value:3},{key:"key2",value:2},{key:"key9",value:1},{key:"key4",value:4},{key:"key19",value:19}];
+const data = [{ key: "key3", value: 3 },
+{ key: "key2", value: 2 },
+{ key: "key9", value: 1 },
+{ key: "key4", value: 4 },
+{ key: "key19", value: 19 },
+{ key: "key12", value: 12 },
+{ key: "key14", value: 14 },
+{ key: "key13", value: 13 },
+{ key: "key11", value: 11 },];
 
-const myTree = new treeNode(data, GetUniqueID());
+const myTree = new treeNode(data, GetUniqueID(), null);
 
 function App() {
   const selfRef = useRef(null);
-  const nodeTransition = transition().duration(300).ease(easeLinear);
-  let [nodes, setNodes] = useState(1); 
-  let [selected, setSelect] = useState([]); 
-  let [clickAmount, setClick] = useState(0);
-  let [zoomState, setZoom] = useState({k:1, x:0, y:10});
-  
-     
+  const nodeTransition = transition().duration(200).ease(easeLinear);
+  let mergeQueue = useRef([]);
+  let maxDepth = useRef(depth(myTree));
+  let [nodes, setNodes] = useState(1);
+  let [selected, setSelect] = useState([]);
+  let [nodesPointer, setPointer] = useState([myTree]);
+  let [zoomState, setZoom] = useState({ k: 1, x: 0, y: 10 });
+  let [mergeBtnOff, setMergeBtn] = useState(true);
 
-  // },[])
+
+
+  useEffect(()=>{
+    
+    if(maxDepth.current != 0){
+      setMergeBtn(!getNodesAt(myTree, maxDepth.current).every(tree => tree.sorted))
+    }
+  },[maxDepth.current])
+
   useEffect(() => {
    
     const app = select(selfRef.current);
     const svg = app.select("svg");
-    const svgZoom = zoom().on("zoom",()=>{zoomHandler(svg)});
-    const d3treeLayout = tree().size([500,200]);
-    const linkGenerator = linkVertical().x(node=>node.x).y(node=>node.y);
+    const svgZoom = zoom().on("zoom", () => { zoomHandler(svg) });
+    const d3treeLayout = tree().size([500, 200]);
+    const linkGenerator = linkVertical().source(d => sourceRefine(d)).target(d => targetRefine(d));
     // treeLayout(myTree,500,200);
     const root = hierarchy(myTree);
     d3treeLayout(root);
     refinement(root, 100);
     // svg.selectAll('g').remove();
-    svg.call(svgZoom).on("dblclick.zoom",null);
+    svg.call(svgZoom).on("dblclick.zoom", null);
 
-    svg.select('g').attr("transform", "translate(" + zoomState.x + "," + zoomState.y + ") scale("+zoomState.k+")");
+    svg.select('g').attr("transform", "translate(" + zoomState.x + "," + zoomState.y + ") scale(" + zoomState.k + ")");
 
     svg.select("g").selectAll(".gnode")
-    .data(root.descendants())
-    .join(appendNode2, updateNode2, removeNode)
-    
+      .data(root.descendants())
+      .join(appendNode2, updateNode2, removeNode)
+      .selectAll('.element')  // 
+      .data(d => d.data.elements, function (d) { return d.value }) // correct version 
+      .join(appendElement, updateElement, removeElement)
+
 
     // svg.select('g').selectAll(".link").remove();
     svg.select("g").selectAll(".link").data(root.links())
-    .join((enter)=>appendLink(enter, linkGenerator),
-      (update)=>updateLink(update, linkGenerator),
-      exit=>exit)
-    
-  },[nodes,selected])
+      .join((enter) => appendLink(enter, linkGenerator),
+        (update) => updateLink(update, linkGenerator),
+        exit => exit.remove())
+
+  }, [nodes])
+
+  function sourceRefine(node) {
+    let sourceX = node.source.x;
+    let sourceY = node.source.y + 20;
+    return [sourceX, sourceY];
+  }
+
+  function targetRefine(node) {
+    let targetX = node.target.x;
+    let targetY = node.target.y;
+    return [targetX, targetY];
+  }
 
 
   /**
@@ -57,231 +89,343 @@ function App() {
    * @param {d3 enter selection} enter 
    * @returns 
    */
-  function appendNode(enter){
+  function appendNode(enter) {
     return enter
-    .append('g')
-    .classed('gnode',true)
-    .append("circle")
-    .attr("cx", d =>d.x)
-    .attr("cy", d=>d.y)
-    .attr("r",(d)=>10)
-    .attr("fill","white")
-    .style("display",function(d){if(d.display){return d.display}})
-    .attr("stroke","green")
-    .on("click",(event,data)=>{console.log(data);clickHandler(event,data)})
-    .attr("r", `0`)
-    .transition(nodeTransition)
-    .attr("r", `10`)
-    .selection()
+      .append('g')
+      .classed('gnode', true)
+      .append("circle")
+      .attr("cx", d => d.x)
+      .attr("cy", d => d.y)
+      .attr("r", (d) => 10)
+      .attr("fill", "white")
+      .style("display", function (d) { if (d.display) { return d.display } })
+      .attr("stroke", "green")
+      .on("click", (event, data) => { clickHandler(event, data) })
+      .attr("r", `0`)
+      .transition(nodeTransition)
+      .attr("r", `10`)
+      .selection()
 
   }
 
-  function appendNode2(enter){
+  function appendNode2(enter) {
     return enter
-    .append('g')
-    .classed('gnode', true)
-    .attr("transform", (d)=>`translate(${d.x - d.data.node.length*20 / 2},${d.y}) scale(0)`)
-    .on("click",(event,data)=>{clickHandler(event,data)})
-    .transition(nodeTransition)
-    .attr("transform", (d)=>`translate(${d.x - d.data.node.length*20 / 2},${d.y}) scale(1)`)
-    .selection()
-    .selectAll('.element')
-    .data(function(d){console.log(d.data.node); return d.data.node;})
-    .join((enter)=>appendElement(enter),updateElement, removeElement);
+      .append('g')
+      .classed('gnode', true)
+      .attr('stroke', (d) => (d.data.sorted ? 'green' : 'red'))
+      .attr("transform", (d) => `translate(${d.x - d.data.elements.length * 20 / 2},${d.y}) scale(0)`)
+      .on("click", (event, data) => { clickHandler(event, data) })
+      .transition(nodeTransition)
+      .attr("transform", (d) => `translate(${d.x - d.data.elements.length * 20 / 2},${d.y}) scale(1)`)
+
+    // error version
+    // .selectAll('.element')
+    // .data(function (d) {return d.data.elements; })
+    // .join((enter) => appendElement(enter), updateElement, removeElement);
 
   }
 
-  function updateNode2(update){
-    console.log("update here")
-    update
-    .attr("transform", (d)=>`translate(${d.x - d.data.node.length*20 / 2},${d.y}) scale(1)`)
-    .on("click",(event,data)=>{clickHandler(event,data)})
-    return;
+  function updateNode2(update) {
+
+    return update
+      .attr("stroke",(d)=>(d.data.sorted ? 'green' : 'red'))
+      .attr("transform", (d) => { return `translate(${d.x - d.data.elements.length * 20 / 2},${d.y}) scale(1)`; })
+      .on("click", (event, data) => { clickHandler(event, data) })
+
+
+
+
   }
 
   /**
    * 
    * @param {function} enter d3 enter function
    */
-  function appendElement(enter, i){
-    
+  function appendElement(enter) {
     let tmp = enter
-    .append('g')
-    .attr("transform", (d,i)=>`translate(${20*i},${0})`)
-    .classed('element',true);
+      .append('g')
+      .transition(nodeTransition)
+      .delay(300)
+      .selection()
+      .attr("transform", (d, i) => `translate(${20 * i},${0})`)
+      .classed('element', true);
 
     tmp
-    .append('rect')
-    .attr('fill',"none")
-    .attr("stroke",'green')
-    .attr('x',0)
-    .attr('width', 20)
-    .attr('height', 20)
-   
+      .append('rect')
+      .attr('fill', "none")
+      .attr('width', 20)
+      .attr('height', 20)
+      .classed('grect', true)
+
     tmp.append('text')
-    .attr('fontSize', 16)
-    .attr('x', 10)
-    .attr('y',10)
-    .attr('dominant-baseline', 'middle')
-    .attr('text-anchor','middle')
-    .text(function(d){return d.value})
-    
+      .attr('fontSize', 15)
+      .attr('fill', 'black')
+      .attr('stroke-width', '0')
+      .attr('x', 10)
+      .attr('y', 10)
+      .attr('dominant-baseline', 'middle')
+      .attr('text-anchor', 'middle')
+      .text(function (d) { return d.value })
+      .classed('gtext', true)
+
     return;
 
-    // end here
   }
 
   /**
    * 
    * @param {function} update d3 join update function
    */
-  function updateElement(update){
+  function updateElement(update) {
 
+    let tmp = update;
+    let rect = tmp.selectAll('.grect');
+    let text = tmp.selectAll('.gtext')
+    tmp.transition(nodeTransition)
+      .delay(10)
+      .attr("transform", (d, i) => { return `translate(${20 * i},${0})` })
+    return;
   }
 
   /**
    * 
    * @param {function} exit d3 exit function
    */
-  function removeElement(exit){
-    return exit;
+  function removeElement(exit) {
+
+    return exit.transition(nodeTransition).style("opacity", `0`).remove();
   }
 
 
-  function updateNode(update){
-    return update
-    .attr("cx", d=>d.x)
-    .attr("cy", d=>d.y)
-    .on("click",(event,data)=>{clickHandler(event,data)});
+  // function updateNode(update) {
+  //   return update
+  //     .attr("cx", d => d.x)
+  //     .attr("cy", d => d.y)
+  //     .on("click", (event, data) => { clickHandler(event, data) });
+  // }
+
+  function removeNode(exit) {
+    return exit.remove();
   }
 
-  function removeNode(exit){
-    return exit;
-  }
+  function appendLink(enter, linkGenerator) {
 
-  function appendLink(enter, linkGenerator){
-    
     enter.
-    append("path")
-    .classed("link",true)
-    .attr("fill","none")
-    .attr("stroke","black")
-    .attr("d", linkGenerator)
-    .style("opacity",`0`)
-    .transition(nodeTransition)
-    .style("opacity",`1`)
-    .selection();
+      append("path")
+      .classed("link", true)
+      .attr("fill", "none")
+      .attr("stroke", "black")
+      .attr("d", linkGenerator)
+      .style("opacity", `0`)
+      .transition(nodeTransition)
+      .style("opacity", `1`)
+      .selection();
     return;
   }
 
-  function updateLink(update, linkGenerator){
-    
+  function updateLink(update, linkGenerator) {
+
     return update.attr("d", linkGenerator);
   }
 
-  function zoomHandler(svg){
+  function zoomHandler(svg) {
     let aa = zoomTransform(svg.node());
     select("g").attr("transform",
-    "translate(" + aa.x+","+aa.y +")"+ " scale(" + aa.k + ")");
-    setZoom({k:aa.k, x:aa.x, y:aa.y});
+      "translate(" + aa.x + "," + aa.y + ")" + " scale(" + aa.k + ")");
+    setZoom({ k: aa.k, x: aa.x, y: aa.y });
   }
 
-  function clickHandler(event,data){
-    console.log(selected);
-    if(event.ctrlKey){
-      console.log("Multi-Select Event");
+  function clickHandler(event, data) {
+    if (event.ctrlKey) {
       setSelect([...selected, data]);
-    }else{
-    
+    } else {
       setSelect([data]);
     }
-    
+
   }
 
 
-  function solve(){
-    selected.forEach(item=>{
-      let targetNode = item.data;
-      // finding node in the tree
-      let targetTree = myTree.find(targetNode);
-      let nodeData = targetNode.node;
-      // sort treeData by value;
-      nodeData = nodeData.sort((a,b)=> a.value - b.value);
-      //create new child
-      let childTree = new treeNode(nodeData, GetUniqueID());
-      targetTree.setChild(childTree);
-      setNodes(nodes+1);
-    })
-    setSelect([]);
-  }
-
-  function merge(){
-    let childTree = new treeNode([], GetUniqueID());
-    selected.forEach(item=>{
-      let targetNode = item.data;
-      let targetTree = myTree.find(targetNode);
-      let nodeData = targetNode.node;
-      childTree.node = [...childTree.node, ...nodeData];
-      targetTree.setChild(childTree);
-    
-    })
-    setNodes(nodes+1);
-  }
-
-  function split(){
-    console.log(selected);
-    selected.forEach(item=>{
-     
-      let targetNode = item.data;
-      // finding node in the tree
-      let targetTree = myTree.find(targetNode);
-      console.log(myTree.id);
-      let nodeData = targetNode.node;
-      // sort treeData by value;
-      let chunks = splitNArray(nodeData,2);
-
-      for(let i = 0; i< chunks.length; i++){
-        let childTree = new treeNode(chunks[i],GetUniqueID());
-        targetTree.setChild(childTree);
+  function solve() {
+    let next = []
+    nodesPointer.forEach(tree => {
+      if (!tree.sorted) {
+        let treeValue = [...tree.elements];
+        treeValue = treeValue.sort((a, b) => a.value - b.value);
+        let childTree = new treeNode(treeValue, GetUniqueID(), tree);
+        tree.setChild(childTree);
+        next.push(childTree);
+        setNodes(nodes + 1);
       }
-      setNodes(nodes+chunks.length);
     })
-    setSelect([]);
+    setPointer(next);
+    maxDepth.current = depth(myTree);
+
+  }
+
+  function split() {
+    let next = [];
+    nodesPointer.forEach(tree => {
+
+      if (tree.sorted) {
+        return;
+      }
+      // tree: Target Tree needed to be splited into smaller chunks
+      // treeValue: tree.elements
+      let treeValue = tree.elements;
+      // split elements into n parts
+      let chunks = splitNArray(treeValue, 2);
+      for (let i = 0; i < chunks.length; i++) {
+        let childTree = new treeNode(chunks[i], GetUniqueID(), tree);
+        tree.setChild(childTree);
+        next.push(childTree);
+      }
+      setNodes(nodes + chunks.length);
+    })
+
+    setPointer(next);
+    maxDepth.current = depth(myTree);
+    
+  }
+
+  /**
+   * Insert specified value into the data in elements
+   * @param {treeNode} node target TreeNode which receive the value 
+   * @param {Integer} value specified value
+   */
+  function insertValue(tree, value) {
+    tree.elements = [...tree.elements, value];
+  }
+
+  /**
+   * Remove first value of the data in tree
+   * @param {treeNode} tree target treeNode which remove first value
+   */
+  function removeValue(tree) {
+    let tmp = [...tree.elements]
+    tmp.splice(0, 1);
+    tree.elements = tmp;
+    if(tree.elements.length == 0){
+      tree.parent.removeChild(tree.id);
+    }
+  }
+
+  /**
+   * Get the smallest value from sorted arrays one call
+   * @param {treeNode[]} treeNodes an array of treeNodes. each treeNode's elements are sorted.
+   * @returns {[Integer, Object]}an array contains index of treeNode that have smallest value and smallest value.
+   * Index 0 is index of treeNode, Index 1 is value. return an empty array if there is no possible value
+   */
+  function getValue(treeNodes) {
+    let value = Number.POSITIVE_INFINITY;
+    let index;
+    let element;
+    
+
+    for(let i = 0; i < treeNodes.length; i++ ){
+      if(treeNodes[i].elements.length == 0){
+        continue;
+      }else if(treeNodes[i].elements[0].value < value){
+        value = treeNodes[i].elements[0].value;
+        element = treeNodes[i].elements[0];
+        index = i;
+      }
+    }
+
+    if(index == undefined){
+      return [];
+    }
+
+    return [index, element];
+  }
+
+  function mergeOne() {
+    let head;
+    let value;
+    let parent;
+    let child;
+    console.log(mergeQueue.current)
+    if (mergeQueue.current.length == 0) {
+      mergeQueue.current = splitByParentID(getNodesAt(myTree, maxDepth.current));
+    }
+    head = mergeQueue.current.at(0); // get queue head;
+    parent = head[0].parent // get parent reference;
+    if(!parent.sorted){
+      parent.elements = [];
+      parent.sorted = true;
+    }
+
+    value = getValue(head); // get value object;
+    child = head[value[0]]; // get child reference;
+
+    removeValue(child); // remove value from child 
+    insertValue(parent, value[1]) // insert value to parent
+
+    if(head.every(node=>node.elements.length == 0)){
+      mergeQueue.current.shift();
+    }
+
+    if(mergeQueue.current.length ==0){
+      maxDepth.current -= 1;
+    }
+
+    setNodes(nodes + 1);
+
+    if(maxDepth.current == 0){
+      setMergeBtn(true);
+    }
+
+  }
+
+  function merge() {
+    if (mergeQueue.current.length == 0) {
+      mergeQueue.current = splitByParentID(getNodesAt(myTree, maxDepth.current));
+    }
+
+    while(mergeQueue.current.length > 0){
+      let head = mergeQueue.current.shift();
+      while(head.some(node=>node.elements.length != 0)){
+        let parent = head[0].parent // get parent reference;
+        if(!parent.sorted){
+          parent.elements = [];
+          parent.sorted = true;
+        }
+    
+        let value = getValue(head); // get value object;
+        let child = head[value[0]]; // get child reference;
+    
+        removeValue(child); // remove value from child 
+        insertValue(parent, value[1]) // insert value to parent
+      }
+    }
+    maxDepth.current -= 1;
+    if(maxDepth.current == 0){
+      setMergeBtn(true);
+    }
+    setNodes(nodes + 1);
   }
 
   return (
-    // <div className="App" ref={selfRef}>
-    //   {nodes.map((item, index)=>(
-    //     <AArray key={"AArray"+index} 
-    //       data={item} 
-    //       ref={(ref)=>{arrRefs.current[index]= ref}} 
-    //       index={index}
-    //       onClick={(res)=>{setSelect(res)}} />
-    //   ))}
-      
+    <div className='App'>
+      <div id='svgContainer' ref={selfRef}>
+        <svg className='animationArea' width={500} height={500} style={{ border: "1px solid green" }}>
+          <g>
 
-    //   {/* <AArray ref={arrRefs} data={data} onClick={(res)=>{setSelect(res)}}/> */}
-    //   <button onClick={()=>{
-    //     setNodes([...nodes, ...arrRefs.current[selected].split(2)])
-    //   }}>Split</button>
-    // </div>
-    
-    <div className='App' ref={selfRef}>
-      <svg className='animationArea' ref={selfRef} width={500} height={500} style={{border:"1px solid green"}}>
-        <g>
+          </g>
+        </svg>
 
-        </g>
-      </svg>
-      <button onClick={split}>
-        Split
-      </button>
-      <button onClick={solve}>Solve</button>
-      <button onClick={merge}>Merge</button>
+      </div>
+
+      <div>
+        <div>Current Node:{selected.map(layer1 => layer1.data.elements.map(layer2 => layer2.value) + " / ")}</div>
+        <button onClick={split}>
+          Split
+        </button>
+        <button onClick={solve}>Solve</button>
+        <button onClick={merge} disabled={mergeBtnOff}>Merge</button>
+        <button onClick={mergeOne} disabled={mergeBtnOff}>Old fansion</button>
+      </div>
+
     </div>
-    
-    // <div className='App'>
-    //   <ATree ref={arrRefs.current[selected]} width={400} height={400}/>
-    // </div>
   );
 }
 
