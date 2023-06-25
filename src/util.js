@@ -17,7 +17,7 @@ class treeNode {
      */
     removeChild(id) {
         let tmp = this.children;
-        let index = tmp.findIndex(element => element.id == id);
+        let index = tmp.findIndex(element => element.id === id);
         tmp.splice(index, 1);
         this.children = tmp;
     }
@@ -44,7 +44,7 @@ class treeNode {
         let queue = [this];
         while (queue.length > 0) {
             pointer = queue.shift();
-            if (pointer.id == tree.id) {
+            if (pointer.id === tree.id) {
                 return pointer;
             }
             queue.push(...pointer.children);
@@ -317,6 +317,37 @@ function isSolved(data) {
 }
 
 
+class Point{
+    constructor(x = 0, y = 0){
+        this.x = x;
+        this.y = y;
+    }
+
+}
+
+/**
+ * random generate some non-duplicate points in certain range.
+ * @param {Integer} range positive integer
+ * @param {Integer} amount amount of points 
+ * @returns {[{x:Integer, y:Integer}]} an array of point.
+ */
+
+function pointGenerator(range, amount){
+    let dataset = [];
+    let xPools = [...Array(range).keys()];
+    let yPools = [...Array(range).keys()];
+  
+    for(let start = 0; start < amount; start++){
+        let x = xPools.splice(Math.floor(Math.random()*xPools.length) , 1)[0];
+        let y = yPools.splice(Math.floor(Math.random()*yPools.length), 1)[0];
+        dataset.push({key:`key${x}${y}`, value:{x:x, y:y}});
+    }
+    return dataset;
+}
 
 
-export { treeNode, GetUniqueID, splitNArray, treeLayout, refinement, getNodesAt, depth, splitByParentID }
+
+
+
+
+export { treeNode, GetUniqueID, splitNArray, treeLayout, refinement, getNodesAt, depth, splitByParentID, pointGenerator}

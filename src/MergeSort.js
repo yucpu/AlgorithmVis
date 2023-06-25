@@ -1,7 +1,7 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { select, tree, linkVertical, hierarchy, zoom, zoomTransform, transition, easeLinear, max, } from 'd3';
+import { select, tree, linkVertical, hierarchy, zoom, zoomTransform, transition, easeLinear, } from 'd3';
 import './App.css';
-import { treeNode, GetUniqueID, splitNArray, getNodesAt, refinement, depth, splitByParentID, treeLayout } from './util';
+import { treeNode, GetUniqueID, splitNArray, getNodesAt, refinement, depth, splitByParentID} from './util';
 
 
 const data = [{ key: "key3", value: 3 },
@@ -21,7 +21,7 @@ function MergeSort() {
   const nodeTransition = transition().duration(200).ease(easeLinear);
   let mergeQueue = useRef([]);
   let maxDepth = useRef(depth(myTree));
-  let [nodes, setNodes] = useState(1);
+  let [update, setUpdate] = useState(1);
   let [selected, setSelect] = useState([]);
   let [nodesPointer, setPointer] = useState([myTree]);
   let [zoomState, setZoom] = useState({ k: 1, x: 0, y: 10 });
@@ -61,7 +61,7 @@ function MergeSort() {
         (update) => updateLink(update, linkGenerator),
         exit => exit.remove())
 
-  }, [nodes])
+  }, [update])
 
   function sourceRefine(node) {
     let sourceX = node.source.x;
@@ -109,12 +109,6 @@ function MergeSort() {
       .on("click", (event, data) => { clickHandler(event, data) })
       .transition(nodeTransition)
       .attr("transform", (d) => `translate(${d.x - d.data.elements.length * 20 / 2},${d.y}) scale(1)`)
-
-    // error version
-    // .selectAll('.element')
-    // .data(function (d) {return d.data.elements; })
-    // .join((enter) => appendElement(enter), updateElement, removeElement);
-
   }
 
   function updateNode2(update) {
@@ -246,7 +240,7 @@ function MergeSort() {
         let childTree = new treeNode(treeValue, GetUniqueID(), tree);
         tree.setChild(childTree);
         next.push(childTree);
-        setNodes(nodes + 1);
+        setUpdate(update + 1);
       }
     })
     setPointer(next);
@@ -257,7 +251,6 @@ function MergeSort() {
   function split() {
     let next = [];
     nodesPointer.forEach(tree => {
-
       if (tree.sorted) {
         return;
       }
@@ -271,12 +264,10 @@ function MergeSort() {
         tree.setChild(childTree);
         next.push(childTree);
       }
-      setNodes(nodes + chunks.length);
+      setUpdate(update + chunks.length);
     })
-
     setPointer(next);
     maxDepth.current = depth(myTree);
-    
   }
 
   /**
@@ -360,7 +351,7 @@ function MergeSort() {
       maxDepth.current -= 1;
     }
 
-    setNodes(nodes + 1);
+    setUpdate(update + 1);
 
     if(maxDepth.current == 0){
       setMergeBtn(true);
@@ -393,7 +384,7 @@ function MergeSort() {
     if(maxDepth.current == 0){
       setMergeBtn(true);
     }
-    setNodes(nodes + 1);
+    setUpdate(update + 1);
   }
 
   return (
