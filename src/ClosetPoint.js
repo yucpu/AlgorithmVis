@@ -1,13 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { select, tree, linkVertical, hierarchy, zoom, zoomTransform, transition, easeLinear, Selection, } from 'd3';
-import { treeNode, GetUniqueID, splitNArray, getNodesAt, refinement, depth, splitByParentID, pointGenerator } from './util';
+import { select, tree, linkVertical, hierarchy, transition, easeLinear, Selection, } from 'd3';
+import { treeNode, GetUniqueID, splitNArray, getNodesAt, depth, splitByParentID, pointGenerator, sortPoints, addPointAttrs, isEqualPoint } from './util';
 
 const data = pointGenerator(500, 30);
 
 export default function ClosetPoint() {
     let selfRef = useRef();
     let myTree = useRef(new treeNode(data, GetUniqueID(), null)).current;
-    let [graph, setGraph] = useState([]);
+    //addPointAttrs(myTree, 'answer', []);
+    // addPointAttrs(myTree, 'boundary', null);
+
+    let [graph, setGraph] = useState();
     const nodeTransition = transition().duration(200).ease(easeLinear);
     let mergeQueue = useRef([]);
     let maxDepth = useRef(depth(myTree));
@@ -18,26 +21,43 @@ export default function ClosetPoint() {
     let [mergeBtnOff, setMergeBtn] = useState(true);
 
     useEffect(() => {
+        addPointAttrs(myTree, 'answer', []);
+        addPointAttrs(myTree, 'boundary', null);
+
+    }, [])
+
+    useEffect(() => {
         const container = select(selfRef.current).select('.animationArea').select('g');
         const d3treeLayout = tree().size([500, 200]);
-        const linkGenerator = linkVertical().source(d => sourceRefine(d)).target(d=>[d.target.x, d.target.y]);
+        const linkGenerator = linkVertical().source(d => sourceRefine(d)).target(d => [d.target.x, d.target.y]);
         const root = hierarchy(myTree);
         d3treeLayout(root);
-        console.log(root.descendants())
-        drawNode(container, root.descendants());
 
+        drawNode(container, root.descendants());
         drawLinks(container, root.links(), linkGenerator);
-        console.log(root.descendants())
 
     }, [update])
 
-    useEffect(()=>{
-        const container = select(selfRef.current).select('.DetailArea').select('g');
-        console.log(graph);
-        container.selectAll('.point').data(graph).join(appendPoint,updatePoint,removePoint);
-        //container.selectAll('g').data(graph).join(enter=>{enter.append('circle').attr('cx', d=>d.x).attr('cy', d=>d.y).attr('r',3)}, update=>update, exit=>exit.remove)
+    useEffect(() => {
 
-    },[graph])
+        const container = select(selfRef.current).select('.DetailArea').select('g');
+        if (graph !== undefined) {
+            container.selectAll('.point').data(graph.elements).join(appendPoint, updatePoint, removePoint);
+            if (graph.boundary !== null) {
+                drawMid(container);
+            }
+            if(graph.answer.length == 2){
+                container.selectAll('.answer').data(graph.answer).join('circle')
+                .classed('answer', true)
+                .attr('cx',d=>d.value.x)
+                .attr('cy', d=>d.value.y)
+                .attr('r',4)
+                .attr('fill','red');
+            }
+        }
+
+
+    }, [graph,update])
 
 
     /**
@@ -46,6 +66,7 @@ export default function ClosetPoint() {
      * @param {hierarchy} dataset d3 Node
      */
     function drawNode(container, dataset) {
+
         container.selectAll('.gnode')
             .data(dataset)
             .join(appendNode, updateNode, removeNode);
@@ -57,17 +78,17 @@ export default function ClosetPoint() {
      */
     function appendNode(enter) {
         enter.append('g').classed('gnode', true)
-            .attr('transform', d=>`translate(${d.x}, ${d.y})`)
+            .attr('transform', d => `translate(${d.x}, ${d.y})`)
             .append('circle')
             .attr('r', 10)
             .attr('fill', 'white')
-            .attr('stroke', 'green')
+            .attr('stroke', d => d.data.answer.length == 0 ? "red" : "green")
             .on('click', (event, data) => { clickHandler(event, data) })
 
     }
 
     function updateNode(update) {
-        update.attr('transform', d=>`translate(${d.x}, ${d.y})`);
+        update.attr('transform', d => `translate(${d.x}, ${d.y})`);
         return;
 
     }
@@ -90,7 +111,7 @@ export default function ClosetPoint() {
      */
     function drawLinks(container, dataset, linkGenerator) {
         container.selectAll('.link').data(dataset)
-            .join((enter) => {appendLink(enter, linkGenerator)},(update)=>{updateLink(update, linkGenerator)}, removeLink)
+            .join((enter) => { appendLink(enter, linkGenerator) }, (update) => { updateLink(update, linkGenerator) }, removeLink)
     }
 
 
@@ -116,7 +137,7 @@ export default function ClosetPoint() {
      * update callback function that is used to update line between node
      * @param {Selection} update 
      */
-    function updateLink(update ,linkGenerator) {
+    function updateLink(update, linkGenerator) {
         return update.attr("d", linkGenerator);
     }
 
@@ -129,8 +150,8 @@ export default function ClosetPoint() {
     }
 
     function clickHandler(e, data) {
-        
-        setGraph(data.data.elements);
+        console.log(data.data);
+        setGraph(data.data);
     }
 
 
@@ -138,21 +159,22 @@ export default function ClosetPoint() {
      * append callback function. append point
      * @param {Selection} enter 
      */
-    function appendPoint(enter){
-        enter.append('circle').classed('point',true)
-        .attr('cx', d=>d.value.x)
-        .attr('cy',d=>d.value.y)
-        .attr('r',3);
+    function appendPoint(enter) {
+        enter.append('circle').classed('point', true)
+            .attr('cx', d => d.value.x)
+            .attr('cy', d => d.value.y)
+            .attr('r', 4)
     }
 
     /**
      * Update callback function. update point
      * @param {Selection} update 
      */
-    function updatePoint(update){
+    function updatePoint(update) {
+        
         update
-        .attr('cx', d=>d.value.x)
-        .attr('cy',d=>d.value.y)
+            .attr('cx', d => d.value.x)
+            .attr('cy', d => d.value.y)
         return;
     }
 
@@ -160,31 +182,160 @@ export default function ClosetPoint() {
      * Exit callback function. exit point
      * @param {Selection} exit 
      */
-    function removePoint(exit){
+    function removePoint(exit) {
         exit.remove();
     }
 
+    /**
+     * draw mid line in the graph
+     * @param {Selection} container 
+     */
+    function drawMid(container) {
+        container.selectAll('.splitLine').remove();
+        container
+            .append('line')
+            .classed('splitLine', true)
+            .attr('x1', graph.boundary.x)
+            .attr('x2', graph.boundary.x)
+            .attr('y1', 0)
+            .attr('y2', 500)
+            .attr('stroke', 'red');
+
+    }
 
     function split() {
+
         let next = [];
         nodesPointer.forEach(tree => {
             if (tree.sorted) {
                 return;
             }
-            // tree: Target Tree needed to be splited into smaller chunks
-            // treeValue: tree.elements
+
             let treeValue = tree.elements;
-            // split elements into n parts
-            let chunks = splitNArray(treeValue, 2);
-            for (let i = 0; i < chunks.length; i++) {
-                let childTree = new treeNode(chunks[i], GetUniqueID(), tree);
-                tree.setChild(childTree);
-                next.push(childTree);
-            }
-            setUpdate(update + chunks.length);
+            let mid = Math.floor((0 + treeValue.length - 1) / 2);
+
+            let leftChild = new treeNode(treeValue.slice(0, mid + 1), GetUniqueID(), tree);
+            addPointAttrs(leftChild, 'answer', []);
+            addPointAttrs(leftChild, 'boundary', null);
+            let rightChild = new treeNode(treeValue.slice(mid + 1, treeValue.length), GetUniqueID(), tree);
+            addPointAttrs(rightChild, 'answer', []);
+            addPointAttrs(rightChild, 'boundary', null);
+            // set split boundary (mid point)
+            tree.setChild(leftChild);
+            tree.setChild(rightChild);
+            addPointAttrs(tree, 'boundary', treeValue[mid].value)
+            setUpdate(update + 2);
+            console.log(myTree);
         })
         setPointer(next);
         maxDepth.current = depth(myTree);
+    }
+
+    function solve() {
+        let next = []
+        nodesPointer.forEach(tree => {
+            if (!tree.solved) {
+                let treeValue = [...tree.elements];
+
+                let result = getMinDistance(treeValue, 0, treeValue.length - 1);
+                let pair = result[1]
+                let count = 0;
+                console.log(pair);
+                for(let i = treeValue.length - 1; i >=0; i-- ){
+                    if(pair[0].key === treeValue[i].key){
+                        treeValue.splice(i,1);
+                        count += 1;
+                    }
+                    if(pair[1].key === treeValue[i].key){
+                        treeValue.splice(i,1);
+                        count += 1;
+                    }
+                    if(count == 2){
+                        break;
+                    }
+                }
+                
+                addPointAttrs(tree, 'answer', pair);
+                tree.elements = treeValue;
+                tree.solved = true;
+                next.push(tree);
+                setUpdate(update + 1);
+            }
+        })
+        setPointer(next);
+        maxDepth.current = depth(myTree);
+
+    }
+
+    /**
+     * Get the Distance between Point A and Point B
+     * @param {{x:Integer, y:Integer}} pointA an Object that has x-coordination and y-coordination
+     * @param {{x:Integer, y:Integer}} pointB an Object that has x-coordination and y-coordination
+     * 
+     * @returns {Number} the distance between point A and point B
+     */
+    function getDistantce(pointA, pointB) {
+        let answer = Math.sqrt(Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2));
+        return answer;
+    }
+
+    function getMinDistance(data, low, high) {
+        // two points
+        if (high - low == 1) {
+            let answer = getDistantce(data[low].value, data[high].value)
+            return [answer, [data[low], data[high]]];
+        }
+        // three points
+        if (high - low == 2) {
+            let distanceA = getDistantce(data[low].value, data[low + 1].value);
+            let distanceB = getDistantce(data[low + 1].value, data[high].value);
+            let distanceC = getDistantce(data[low].value, data[high].value);
+
+            let min = Math.min(distanceA, distanceB, distanceC);
+            if (min == distanceA) {
+                return [min, [data[low], data[low + 1]]];
+            } else if (min == distanceB) {
+                return [min, [data[low + 1], data[high]]];
+            } else {
+                return [min, [data[low], data[high]]];
+            }
+        } else {
+            let mid = Math.floor((low + high) / 2);
+            let LeftPart = getMinDistance(data, low, mid);
+            let RightPart = getMinDistance(data, mid + 1, high);
+            let bound = Math.min(LeftPart[0], RightPart[0]);
+            let midX = data[mid].value.x;
+            let LeftX = midX - bound;
+            let RightX = midX + bound;
+            let candiate = [];
+            let points = bound == LeftPart[0] ? LeftPart[1] : RightPart[1];
+
+            for (let i = mid; i >= 0; i--) {
+                if (data[i].value.x > LeftX) {
+                    candiate.push(data[i]);
+                }
+            }
+
+            for (let i = mid + 1; i <= high; i++) {
+                if (data[i].value.x < RightX) {
+                    candiate.push(data[i]);
+                }
+            }
+            candiate = sortPoints(candiate, 'y');
+
+            for (let i = 0; i < candiate.length - 1; i++) {
+                if (candiate[i].value.y - candiate[i + 1].value.y >= bound) {
+                    continue;
+                }
+                let temp = getDistantce(candiate[i].value, candiate[i + 1].value);
+                if (temp < bound) {
+                    bound = temp;
+                    points = [candiate[i], candiate[i + 1]];
+                }
+            }
+
+            return [bound, points];
+        }
     }
 
 
@@ -197,7 +348,7 @@ export default function ClosetPoint() {
                     </g>
                 </svg>
 
-                <svg className='DetailArea' width={500} height={500} style={{border: "1px solid green"}}>
+                <svg className='DetailArea' width={500} height={500} style={{ border: "1px solid green" }}>
                     <g>
 
                     </g>
@@ -208,7 +359,7 @@ export default function ClosetPoint() {
                 <button onClick={split}>
                     Split
                 </button>
-                <button >Solve</button>
+                <button onClick={solve}>Solve</button>
                 <button disabled={mergeBtnOff}>Merge</button>
                 <button disabled={mergeBtnOff}>Old fansion</button>
             </div>

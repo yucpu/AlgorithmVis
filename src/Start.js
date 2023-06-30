@@ -1,6 +1,7 @@
 import React from 'react'
-import App from './MergeSort';
+
 import ClosetPoint from './ClosetPoint';
+import MergeSort from './MergeSort';
 
 export default function Start() {
   return (

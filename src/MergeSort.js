@@ -14,10 +14,13 @@ const data = [{ key: "key3", value: 3 },
 { key: "key13", value: 13 },
 { key: "key11", value: 11 },];
 
-const myTree = new treeNode(data, GetUniqueID(), null);
+
+
+
 
 function MergeSort() {
   const selfRef = useRef(null);
+  let myTree = useRef(new treeNode(data, GetUniqueID(), null)).current;
   const nodeTransition = transition().duration(200).ease(easeLinear);
   let mergeQueue = useRef([]);
   let maxDepth = useRef(depth(myTree));
@@ -32,9 +35,9 @@ function MergeSort() {
   useEffect(()=>{
     
     if(maxDepth.current != 0){
-      setMergeBtn(!getNodesAt(myTree, maxDepth.current).every(tree => tree.sorted))
+      setMergeBtn(!getNodesAt(myTree, maxDepth.current).every(tree => tree.solved))
     }
-  },[maxDepth.current])
+  },[maxDepth.current, update])
 
   useEffect(() => {
     const app = select(selfRef.current);
@@ -104,7 +107,7 @@ function MergeSort() {
     return enter
       .append('g')
       .classed('gnode', true)
-      .attr('stroke', (d) => (d.data.sorted ? 'green' : 'red'))
+      .attr('stroke', (d) => (d.data.solved ? 'green' : 'red'))
       .attr("transform", (d) => `translate(${d.x - d.data.elements.length * 20 / 2},${d.y}) scale(0)`)
       .on("click", (event, data) => { clickHandler(event, data) })
       .transition(nodeTransition)
@@ -114,7 +117,7 @@ function MergeSort() {
   function updateNode2(update) {
 
     return update
-      .attr("stroke",(d)=>(d.data.sorted ? 'green' : 'red'))
+      .attr("stroke",(d)=>(d.data.solved ? 'green' : 'red'))
       .attr("transform", (d) => { return `translate(${d.x - d.data.elements.length * 20 / 2},${d.y}) scale(1)`; })
       .on("click", (event, data) => { clickHandler(event, data) })
 
@@ -234,12 +237,12 @@ function MergeSort() {
   function solve() {
     let next = []
     nodesPointer.forEach(tree => {
-      if (!tree.sorted) {
+      if (!tree.solved) {
         let treeValue = [...tree.elements];
         treeValue = treeValue.sort((a, b) => a.value - b.value);
-        let childTree = new treeNode(treeValue, GetUniqueID(), tree);
-        tree.setChild(childTree);
-        next.push(childTree);
+        tree.elements = treeValue;
+        tree.solved = true;
+        next.push(tree);
         setUpdate(update + 1);
       }
     })
@@ -251,7 +254,7 @@ function MergeSort() {
   function split() {
     let next = [];
     nodesPointer.forEach(tree => {
-      if (tree.sorted) {
+      if (tree.solved) {
         return;
       }
       // tree: Target Tree needed to be splited into smaller chunks
@@ -293,8 +296,8 @@ function MergeSort() {
   }
 
   /**
-   * Get the smallest value from sorted arrays one call
-   * @param {treeNode[]} treeNodes an array of treeNodes. each treeNode's elements are sorted.
+   * Get the smallest value from solved arrays one call
+   * @param {treeNode[]} treeNodes an array of treeNodes. each treeNode's elements are solved.
    * @returns {[Integer, Object]}an array contains index of treeNode that have smallest value and smallest value.
    * Index 0 is index of treeNode, Index 1 is value. return an empty array if there is no possible value
    */
@@ -332,9 +335,9 @@ function MergeSort() {
     }
     head = mergeQueue.current.at(0); // get queue head;
     parent = head[0].parent // get parent reference;
-    if(!parent.sorted){
+    if(!parent.solved){
       parent.elements = [];
-      parent.sorted = true;
+      parent.solved = true;
     }
 
     value = getValue(head); // get value object;
@@ -368,9 +371,9 @@ function MergeSort() {
       let head = mergeQueue.current.shift();
       while(head.some(node=>node.elements.length != 0)){
         let parent = head[0].parent // get parent reference;
-        if(!parent.sorted){
+        if(!parent.solved){
           parent.elements = [];
-          parent.sorted = true;
+          parent.solved = true;
         }
     
         let value = getValue(head); // get value object;

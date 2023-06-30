@@ -3,8 +3,9 @@ class treeNode {
         this.elements = elements;
         this.children = [];
         this.id = id;
-        this.sorted = isSolved(elements);
+        this.solved = isSolved(elements);
         this.parent = parent;
+    
     }
 
     setChild(children) {
@@ -55,6 +56,8 @@ class treeNode {
 
 }
 
+
+
 /**
  * split an array into n parts smaller arrays. 
  * @param {Array} array an array
@@ -75,6 +78,20 @@ function splitNArray(array, n = 2) {
         }
     }
     return res;
+}
+
+/**
+ * Split an array of two dimensional points into two parts
+ * @param {[Object]} array filled with two dimensional point
+ * @param {integer} mid the dividing line
+ * 
+ * @returns {[[Object]]}
+ */
+function splitPoint(array, mid){
+    let res = [];
+
+
+    return [[]];
 }
 
 
@@ -223,7 +240,7 @@ function refinement(tree, slope) {
 
 /**
  * Get all nodes of a tree in specified layer
- * @param {treeNode} tree a Tree Object that has elements, children, sorted and id attributes. children is an array.  
+ * @param {treeNode} tree a Tree Object that has elements, children, solved and id attributes. children is an array.  
  * @param {Integer} layer that used to specify the layer
  * @returns {treeNode[]} an array contains all nodes in same layer
  */
@@ -305,10 +322,10 @@ function splitByParentID(array) {
 
 
 /**
- * determine whether the data is sorted or not
+ * determine whether the data is solved or not
  * @param {Array} data 
  * 
- * @returns true if data is sorted, false otherwise
+ * @returns true if data is solved, false otherwise
  */
 function isSolved(data) {
     return data.every((element, index, array) =>
@@ -317,12 +334,26 @@ function isSolved(data) {
 }
 
 
-class Point{
-    constructor(x = 0, y = 0){
-        this.x = x;
-        this.y = y;
+/**
+ * Add attributes of points to the treeNode
+ * @param {treeNode} treeNode Target treeNode that need to be set 
+ * @param {String} action the attribute's name 
+ * @param {Object} value the attr's value
+ */
+function addPointAttrs(treeNode,attrName, value){
+    switch(attrName){
+        case 'answer':
+            treeNode[attrName] = value;
+            return;
+        case 'boundary':
+            
+            treeNode[attrName] = value;
+            
+            return;
+        default:
+            return;
     }
-
+    //treeNode[attrName] = value;
 }
 
 /**
@@ -331,7 +362,6 @@ class Point{
  * @param {Integer} amount amount of points 
  * @returns {[{x:Integer, y:Integer}]} an array of point.
  */
-
 function pointGenerator(range, amount){
     let dataset = [];
     let xPools = [...Array(range).keys()];
@@ -342,12 +372,73 @@ function pointGenerator(range, amount){
         let y = yPools.splice(Math.floor(Math.random()*yPools.length), 1)[0];
         dataset.push({key:`key${x}${y}`, value:{x:x, y:y}});
     }
+
+    dataset = sortPoints(dataset, 'x');
     return dataset;
 }
 
 
+/**
+ * Mergesort an array of point by x-coordination, then by y-coordination
+ *  
+ * @param {[{x:Integer, y:Integer}]} dataset 
+ * @param {String} classifer sort array by specified attrs 
+ */
+function sortPoints(dataset, classifer){
+    
+    if(dataset.length == 1){
+        return dataset;
+    }
+
+    let res = [];
+    let part1 = sortPoints(dataset.slice(0, Math.ceil(dataset.length / 2)), classifer);
+    let part2 = sortPoints(dataset.slice(Math.ceil(dataset.length / 2), dataset.length), classifer);
+
+    let point1 = 0;
+    let point2 = 0;
+    while(point1 < part1.length && point2 < part2.length){
+        if(part1[point1].value[classifer] < part2[point2].value[classifer]){
+            res.push(part1[point1]);
+            point1 += 1;
+        }else if(part1[point1].value[classifer] > part2[point2].value[classifer]){
+            res.push(part2[point2]);
+            point2 += 1;
+        }else{
+            res.push(part1[point1]);
+            point1 += 1;
+        }
+    }
+
+    if(point1 < part1.length){
+        res = res.concat(part1.slice(point1, part1.length));
+    }else{
+        res = res.concat(part2.slice(point2, part2.length));
+    }
+    return res;
+
+}
+
+/**
+ * To know whther p1 isEqual to p2
+ * @param {{x:Integer, y: Integer}} p1 point one
+ * @param {{x:Integer, y: Integer}} p2 point two
+ * @returns {Boolean} return true if p1 and p2 have same coordination, otherwise false
+ */
+function isEqualPoint(p1, p2){
+    if(p1 == undefined){
+        return false;
+    }
+    if(p2 == undefined){
+        return false;
+    }
+    if(p1.x == p2.x && p1.y == p2.y){
+        return true;
+    }
+    return false;
+}
 
 
-
-
-export { treeNode, GetUniqueID, splitNArray, treeLayout, refinement, getNodesAt, depth, splitByParentID, pointGenerator}
+export { treeNode, GetUniqueID, splitNArray, 
+    treeLayout, refinement, getNodesAt, 
+    depth, splitByParentID, pointGenerator, 
+    sortPoints, addPointAttrs,isEqualPoint}
