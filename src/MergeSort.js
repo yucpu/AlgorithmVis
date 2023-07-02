@@ -33,7 +33,6 @@ function MergeSort() {
 
 
   useEffect(()=>{
-    
     if(maxDepth.current != 0){
       setMergeBtn(!getNodesAt(myTree, maxDepth.current).every(tree => tree.solved))
     }
@@ -79,29 +78,7 @@ function MergeSort() {
   }
 
 
-  /**
-   * 
-   * @param {d3 enter selection} enter 
-   * @returns 
-   */
-  function appendNode(enter) {
-    return enter
-      .append('g')
-      .classed('gnode', true)
-      .append("circle")
-      .attr("cx", d => d.x)
-      .attr("cy", d => d.y)
-      .attr("r", (d) => 10)
-      .attr("fill", "white")
-      .style("display", function (d) { if (d.display) { return d.display } })
-      .attr("stroke", "green")
-      .on("click", (event, data) => { clickHandler(event, data) })
-      .attr("r", `0`)
-      .transition(nodeTransition)
-      .attr("r", `10`)
-      .selection()
 
-  }
 
   function appendNode2(enter) {
     return enter

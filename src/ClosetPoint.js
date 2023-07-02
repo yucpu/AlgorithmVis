@@ -23,13 +23,18 @@ export default function ClosetPoint() {
     useEffect(() => {
         addPointAttrs(myTree, 'answer', []);
         addPointAttrs(myTree, 'boundary', null);
-
     }, [])
+
+    useEffect(()=>{
+        if(maxDepth.current != 0){
+          setMergeBtn(!getNodesAt(myTree, maxDepth.current).every(tree => tree.solved))
+        }
+      },[maxDepth.current, update])
 
     useEffect(() => {
         const container = select(selfRef.current).select('.animationArea').select('g');
         const d3treeLayout = tree().size([500, 200]);
-        const linkGenerator = linkVertical().source(d => sourceRefine(d)).target(d => [d.target.x, d.target.y]);
+        const linkGenerator = linkVertical().source(d => sourceRefine(d)).target(d => [d.target.x, d.target.y-10]);
         const root = hierarchy(myTree);
         d3treeLayout(root);
 
@@ -39,12 +44,13 @@ export default function ClosetPoint() {
     }, [update])
 
     useEffect(() => {
-
         const container = select(selfRef.current).select('.DetailArea').select('g');
         if (graph !== undefined) {
             container.selectAll('.point').data(graph.elements).join(appendPoint, updatePoint, removePoint);
             if (graph.boundary !== null) {
                 drawMid(container);
+            }else{
+                container.selectAll('.splitLine').remove();
             }
             if(graph.answer.length == 2){
                 container.selectAll('.answer').data(graph.answer).join('circle')
@@ -53,10 +59,10 @@ export default function ClosetPoint() {
                 .attr('cy', d=>d.value.y)
                 .attr('r',4)
                 .attr('fill','red');
+            }else{
+                container.selectAll('.answer').remove();
             }
         }
-
-
     }, [graph,update])
 
 
@@ -82,15 +88,15 @@ export default function ClosetPoint() {
             .append('circle')
             .attr('r', 10)
             .attr('fill', 'white')
-            .attr('stroke', d => d.data.answer.length == 0 ? "red" : "green")
+            .attr('stroke', d => d.data.solved ? "green" : "red")
             .on('click', (event, data) => { clickHandler(event, data) })
 
     }
 
     function updateNode(update) {
         update.attr('transform', d => `translate(${d.x}, ${d.y})`);
-        return;
-
+        update.selectAll('circle')
+        .attr('stroke', d =>d.data.solved ? 'green' : 'red');
     }
 
     function removeNode(exit) {
@@ -207,13 +213,37 @@ export default function ClosetPoint() {
 
         let next = [];
         nodesPointer.forEach(tree => {
-            if (tree.sorted) {
+            if(tree.solved){
                 return;
             }
-
             let treeValue = tree.elements;
+            
+            if (treeValue.length == 2) {
+                addPointAttrs(tree, 'answer', [...tree.elements]);
+                tree.elements = [];
+                tree.solved = true;
+                return;
+            }
+            if(treeValue.length == 3){
+                let distanceA = getDistantce(treeValue[0].value, treeValue[1].value);
+                let distanceB = getDistantce(treeValue[0].value, treeValue[2].value);
+                let distanceC = getDistantce(treeValue[1].value, treeValue[2].value);
+                let min = Math.min(distanceA,distanceB,distanceC);
+                
+                if(min == distanceA){
+                    tree.elements = [treeValue[2]];
+                    addPointAttrs(tree, 'answer', [treeValue[0], treeValue[1]]);
+                }else if(min == distanceB){
+                    tree.elements = [treeValue[1]];
+                    addPointAttrs(tree, 'answer', [treeValue[0], treeValue[2]]);
+                }else{
+                    tree.elements = [treeValue[0]];
+                    addPointAttrs(tree, 'answer', [treeValue[1], treeValue[2]]);
+                }
+                tree.solved = true;
+                return;
+            }
             let mid = Math.floor((0 + treeValue.length - 1) / 2);
-
             let leftChild = new treeNode(treeValue.slice(0, mid + 1), GetUniqueID(), tree);
             addPointAttrs(leftChild, 'answer', []);
             addPointAttrs(leftChild, 'boundary', null);
@@ -224,6 +254,8 @@ export default function ClosetPoint() {
             tree.setChild(leftChild);
             tree.setChild(rightChild);
             addPointAttrs(tree, 'boundary', treeValue[mid].value)
+            next.push(leftChild);
+            next.push(rightChild);
             setUpdate(update + 2);
             console.log(myTree);
         })
@@ -236,19 +268,20 @@ export default function ClosetPoint() {
         nodesPointer.forEach(tree => {
             if (!tree.solved) {
                 let treeValue = [...tree.elements];
-
                 let result = getMinDistance(treeValue, 0, treeValue.length - 1);
                 let pair = result[1]
                 let count = 0;
-                console.log(pair);
+                
                 for(let i = treeValue.length - 1; i >=0; i-- ){
                     if(pair[0].key === treeValue[i].key){
                         treeValue.splice(i,1);
                         count += 1;
+                        continue;
                     }
                     if(pair[1].key === treeValue[i].key){
                         treeValue.splice(i,1);
                         count += 1;
+                        continue;
                     }
                     if(count == 2){
                         break;
@@ -259,10 +292,10 @@ export default function ClosetPoint() {
                 tree.elements = treeValue;
                 tree.solved = true;
                 next.push(tree);
-                setUpdate(update + 1);
             }
         })
         setPointer(next);
+        setUpdate(update + 1);
         maxDepth.current = depth(myTree);
 
     }
@@ -282,7 +315,7 @@ export default function ClosetPoint() {
     function getMinDistance(data, low, high) {
         // two points
         if (high - low == 1) {
-            let answer = getDistantce(data[low].value, data[high].value)
+            let answer = getDistantce(data[low].value, data[high].value);
             return [answer, [data[low], data[high]]];
         }
         // three points
@@ -333,9 +366,23 @@ export default function ClosetPoint() {
                     points = [candiate[i], candiate[i + 1]];
                 }
             }
-
             return [bound, points];
         }
+    }
+    
+    function mergeOne(){
+        let head;
+        let value;
+        let parent;
+        let child;
+        console.log(mergeQueue.current)
+        if (mergeQueue.current.length == 0) {
+          mergeQueue.current = splitByParentID(getNodesAt(myTree, maxDepth.current));
+        }
+        console.log(mergeQueue.current);
+        head = mergeQueue.current.at(0); // get queue head;
+        parent = head[0].parent // get parent reference;
+        setGraph(parent);
     }
 
 
@@ -360,7 +407,7 @@ export default function ClosetPoint() {
                     Split
                 </button>
                 <button onClick={solve}>Solve</button>
-                <button disabled={mergeBtnOff}>Merge</button>
+                <button disabled={mergeBtnOff} onClick={mergeOne}>Merge</button>
                 <button disabled={mergeBtnOff}>Old fansion</button>
             </div>
 
