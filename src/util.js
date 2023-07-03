@@ -56,7 +56,67 @@ class treeNode {
 
 }
 
+/**
+ * For closet pair point algorithm use
+ */
+class PointNode extends treeNode{
+    constructor(elements, id, parent = null){
+        super(elements, id, parent);
+        this.answer = [];
+        this.distance = 600;
+        this.interestArea = [];
+        this.mergeArea = [];
+        this.actionQueue = null;
+        this.boundary = null;
+        this.childAns = 'none';
+        this.leftAnswer = [];
+        this.rightAnswer = [];
 
+    }
+}
+
+
+class Action{
+    /**
+     * Action's constructor
+     * @param {String} name Action name 
+     * @param {*} value data that needed to run solution function
+     * @param {Function} solution the function that specify how to run execute this action
+     */
+    constructor(name, value, solution){
+        this.name = name;
+        this.value = value;
+        this.solution = solution;
+
+    }
+
+    do(){
+        this.solution(...this.value);
+    }
+}
+
+class ActionQueue{
+    constructor(){
+        this.actions = [];
+    }
+
+    /**
+     * Push function. push one action into queue.
+     * @param {Action} action Action
+     */
+    push(action){
+        this.actions.push(action);
+    }
+
+    pop(){
+        if(this.actions.length == 0){
+            return;
+        }
+        let head = this.actions.at(0);
+        head.do();
+        this.actions.shift();
+    }
+}
 
 /**
  * split an array into n parts smaller arrays. 
@@ -79,21 +139,6 @@ function splitNArray(array, n = 2) {
     }
     return res;
 }
-
-/**
- * Split an array of two dimensional points into two parts
- * @param {[Object]} array filled with two dimensional point
- * @param {integer} mid the dividing line
- * 
- * @returns {[[Object]]}
- */
-function splitPoint(array, mid){
-    let res = [];
-
-
-    return [[]];
-}
-
 
 
 function GetUniqueID() {
@@ -346,9 +391,16 @@ function addPointAttrs(treeNode,attrName, value){
             treeNode[attrName] = value;
             return;
         case 'boundary':
-            
             treeNode[attrName] = value;
-            
+            return;
+        case 'interestArea':
+            treeNode[attrName] = value;
+            return;
+        case 'actionQueue':
+            treeNode[attrName] = value;
+            return;
+        case 'mergeArea':
+            treeNode[attrName] = value;
             return;
         default:
             return;
@@ -441,4 +493,5 @@ function isEqualPoint(p1, p2){
 export { treeNode, GetUniqueID, splitNArray, 
     treeLayout, refinement, getNodesAt, 
     depth, splitByParentID, pointGenerator, 
-    sortPoints, addPointAttrs,isEqualPoint}
+    sortPoints, addPointAttrs,isEqualPoint
+    ,ActionQueue, Action, PointNode}
