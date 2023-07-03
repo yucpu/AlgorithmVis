@@ -2,6 +2,79 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef} from 'react'
 import {select, hierarchy, tree, linkVertical} from 'd3';
 import AArray from './AArray';
 
+const a = [
+  {
+      "key": "key164393",
+      "value": {
+          "x": 164,
+          "y": 393
+      }
+  },
+  {
+      "key": "key179195",
+      "value": {
+          "x": 179,
+          "y": 195
+      }
+  },
+  {
+      "key": "key181340",
+      "value": {
+          "x": 181,
+          "y": 340
+      }
+  },
+  {
+      "key": "key213454",
+      "value": {
+          "x": 213,
+          "y": 454
+      }
+  },
+  {
+      "key": "key245259",
+      "value": {
+          "x": 245,
+          "y": 259
+      }
+  },
+  {
+      "key": "key246279",
+      "value": {
+          "x": 246,
+          "y": 279
+      }
+  },
+  {
+      "key": "key297294",
+      "value": {
+          "x": 297,
+          "y": 294
+      }
+  },
+  {
+      "key": "key308183",
+      "value": {
+          "x": 308,
+          "y": 183
+      }
+  },
+  {
+      "key": "key404106",
+      "value": {
+          "x": 404,
+          "y": 106
+      }
+  },
+  {
+      "key": "key446234",
+      "value": {
+          "x": 446,
+          "y": 234
+      }
+  }
+]
+
 const ATree = forwardRef((props, ref) => {
     let svgWidth = props.width || 0;
     let svgHeight = props.height || 0;

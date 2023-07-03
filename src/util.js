@@ -91,6 +91,7 @@ class Action{
     }
 
     do(){
+        console.log(this.name);
         this.solution(...this.value);
     }
 }
