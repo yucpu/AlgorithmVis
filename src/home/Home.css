@@ -1,0 +1,19 @@
+.HomePage{
+    text-align: center;
+    text-align: -webkit-center;
+}
+
+.projectTitle{
+    margin-top: 4vh;
+    display: grid;
+    grid-template-rows: 3vh 11vh 3vh;
+    justify-items: center;
+    align-items: center;
+}
+
+.introduction{
+    text-align: left;
+    min-width: 30vh;
+    max-width: 120vh;
+    min-height: 40vh;
+}
