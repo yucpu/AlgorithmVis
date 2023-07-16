@@ -13,17 +13,6 @@
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
 .App-link {
   color: #61dafb;
 }
@@ -37,30 +26,6 @@
   }
 }
 
-
-.solved-arr-element{
-  width: 20px;
-  height: 20px;
-  margin: 2px;
-  border: 2px solid greenyellow;
-  border-radius: 4px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.problem-arr-element{
-  width: 20px;
-  height: 20px;
-  margin: 2px;
-  border: 2px solid red;
-  border-radius: 4px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-
 .chart{
   width: auto;
 }
@@ -70,8 +35,61 @@
 
 }
 
-.gnode{
-  
-  transform-origin: 0 0;
+.StartPage{
+  height: 100%;
+  overflow: hidden;
+  scroll-behavior: smooth;
 }
 
+.App-header {
+  background-color: white;
+  min-height: 10vh;
+  position: sticky;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+
+
+.App-header > div:first-of-type{
+  margin-left: 50px;
+  margin-right: 50px;
+  display: flex;
+  flex-direction: column;
+}
+
+.App-header > div:first-child > span:first-child{
+  height: inherit;
+  align-self: center;  
+  font-family: Courier, monospace;
+  font-size: x-large;
+  
+}
+.App-header > div:first-child > span:last-child{
+  align-self: center;
+  font-size: x-large;
+  font-family: Courier, monospace;
+  color: grey;
+}
+
+.App-menu{
+  display: flex;
+  flex-direction: row;
+  gap: 50px;
+  margin-left: 10%;
+}
+.App-menu > span{
+  font-size: larger;
+  cursor: pointer;
+}
+
+.github{
+  margin-left: auto;
+  margin-right: 10%;
+}
+
+.App-footer{
+  text-align: center;
+}
