@@ -73,6 +73,54 @@ class PointNode extends treeNode{
         this.rightAnswer = [];
 
     }
+
+    reset(){
+        this.children = [];
+        this.solved = false;
+        this.answer = [];
+        this.distance = 600;
+        this.interestArea = [];
+        this.mergeArea = [];
+        this.actionQueue = null;
+        this.boundary = null;
+        this.childAns = 'none';
+        this.leftAnswer = [];
+        this.rightAnswer = [];
+    }
+}
+
+
+class TreeState{
+    /**
+     * Initial A new State object which record target object's last time state.
+     * @param {Object} target Target Object 
+     * @param {Array<Object>} attrs Last time state of target object
+     * @param {Any} state React Function Component's state  
+     * @param {Function} [method=null] Function that used to set specified state 
+     */
+    constructor(target = null, attrs = null, state = null, method = null,){
+        this.target = target;
+        this.attrs = attrs;
+        this.state = state;
+        this.method = method;
+    }
+
+    /**
+     * To rollback Object's current state to last version. if method is not provided, 
+     * this function execute default rollback, otherwise, execute provided method
+     */
+    rollback(){
+        if(this.method === null){
+            for(let attr of this.attrs){
+                this.target[attr[0]] = attr[1] 
+            }
+        }else{
+           this.method(this.state);
+        }
+    }
+
+
+
 }
 
 
@@ -99,6 +147,7 @@ class Action{
 class ActionQueue{
     constructor(){
         this.actions = [];
+        this.length = this.actions.length;
     }
 
     /**
@@ -107,6 +156,7 @@ class ActionQueue{
      */
     push(action){
         this.actions.push(action);
+        this.length += 1;
     }
 
     pop(){
@@ -116,7 +166,9 @@ class ActionQueue{
         let head = this.actions.at(0);
         head.do();
         this.actions.shift();
+        this.length -= 1;
     }
+
 }
 
 /**
@@ -386,6 +438,7 @@ function isSolved(data) {
  * @param {String} action the attribute's name 
  * @param {Object} value the attr's value
  */
+
 function addPointAttrs(treeNode,attrName, value){
     switch(attrName){
         case 'answer':
@@ -491,8 +544,10 @@ function isEqualPoint(p1, p2){
 }
 
 
+
+
 export { treeNode, GetUniqueID, splitNArray, 
     treeLayout, refinement, getNodesAt, 
     depth, splitByParentID, pointGenerator, 
     sortPoints, addPointAttrs,isEqualPoint
-    ,ActionQueue, Action, PointNode}
+    ,ActionQueue, Action, PointNode, TreeState}
