@@ -1,11 +1,20 @@
 import React from 'react'
-
 import ClosetPoint from './ClosetPoint';
 import MergeSort from './MergeSort';
 import '../src/App.css';
 import { Avatar, Link, Menu, MenuItem } from '@mui/material';
+import { NavLink, Route, Routes, useNavigate } from 'react-router-dom';
+import HomePage from './home/HomePage';
+import Visualization from './algVis/Visualization';
+import About from './about/About';
+
+
+
+const github = require('../src/assets/github-mark.png')
 
 export default function Start() {
+  const navigate = useNavigate();
+
   return (
     <div className='StartPage'>
         <header className='App-header'>
@@ -14,24 +23,30 @@ export default function Start() {
             <span> DC</span>
           </div>
           <div className='App-menu'>
-              <span onClick={()=>{console.log("Home")}}>
+              <span onClick={()=>{navigate("/")}}>
                 Home
               </span>
-              <span onClick={()=>{console.log("Visualization")}}>
+              <span onClick={()=>{navigate("/visualization")}}>
                 Visualization
               </span>
-              <span onClick={()=>{console.log("About")}}>
+              <span onClick={()=>{navigate("/about")}}>
                 About
               </span>
           </div>
-          <Avatar className='github' alt="Github" src="public/github-mark.svg">
+          <Avatar style={{cursor:"pointer"}} className='github' alt="Github" src={github}>
 
           </Avatar>
         </header>
-        <content>
-          
-        </content>
+        <main className='App-content'>
+          <Routes>
+            <Route index element={<HomePage/>} ></Route>
+            <Route path='visualization' element={<Visualization/>}></Route>
+            <Route path='about' element={<About/>}></Route>
+          </Routes>
+
+        </main>
         <footer className='App-footer'>
+          <div className='splitLine'></div>
           Divide and Conquer Algorithm Visualization @ Yuchen Pu
         </footer>
     </div>
