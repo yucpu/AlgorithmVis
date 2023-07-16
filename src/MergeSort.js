@@ -391,5 +391,4 @@ function MergeSort() {
     </div>
   );
 }
-
 export default MergeSort;

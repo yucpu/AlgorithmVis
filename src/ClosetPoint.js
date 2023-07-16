@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { select, tree, linkVertical, hierarchy, transition, easeLinear, Selection, } from 'd3';
-import { GetUniqueID, getNodesAt, depth, splitByParentID, pointGenerator, sortPoints, ActionQueue, PointNode, Action } from './util';
+import { select, tree, linkVertical, hierarchy, transition, easeLinear, Selection, color, } from 'd3';
+import { GetUniqueID, getNodesAt, depth, splitByParentID, pointGenerator, sortPoints, ActionQueue, PointNode, Action, TreeState } from './util';
 
 // 
 const staticData = [
@@ -79,16 +79,47 @@ export default function ClosetPoint() {
     let selfRef = useRef();
     let data = useRef(staticData).current;
     let myTree = useRef(new PointNode(data, GetUniqueID(), null)).current;
-
+    let stateStack = useRef([]).current;
     let [graph, setGraph] = useState();
     const nodeTransition = transition().duration(200).ease(easeLinear);
     let mergeQueue = useRef([]);
     let maxDepth = useRef(depth(myTree));
     let [update, setUpdate] = useState(1);
-    let [selected, setSelect] = useState([]);
+    //let [selected, setSelect] = useState([]);
     let [nodesPointer, setPointer] = useState([myTree]);
-    let [zoomState, setZoom] = useState({ k: 1, x: 0, y: 10 });
+    //let [zoomState, setZoom] = useState({ k: 1, x: 0, y: 10 });
     let [mergeBtnOff, setMergeBtn] = useState(true);
+
+
+    function restart() {
+        myTree.reset();
+        maxDepth.current = depth(myTree);
+        setMergeBtn(true);
+        setPointer([myTree]);
+        setUpdate(1);
+        setGraph(undefined);
+    }
+
+    function back() {
+        console.log(stateStack);
+        if (stateStack.length === 0) {
+            console.log("state Stack is Empty");
+            return;
+        }
+        let state;
+        do{
+            state = stateStack.pop();
+            state.rollback();
+        }while(state.target === null);
+
+        state.rollback();
+        if (state.target !== null) {
+            setGraph(state.target);
+        }
+        maxDepth.current = depth(myTree);
+        setUpdate(update + 1);
+    }
+
 
     useEffect(() => {
         if (maxDepth.current != 0) {
@@ -114,6 +145,9 @@ export default function ClosetPoint() {
             drawLines(container);
             drawAnswer(container);
 
+        } else {
+            container.selectAll('.point').remove();
+            container.selectAll('line').remove();
         }
     }, [graph, update])
 
@@ -285,7 +319,7 @@ export default function ClosetPoint() {
                 .attr('y1', d => d.y1)
                 .attr('y2', d => d.y2)
                 .attr('stroke', 'purple')
-                .attr('stroke-dasharray', '11 11');
+                .attr('stroke-dasharray', '6 6');
         }
 
 
@@ -297,115 +331,71 @@ export default function ClosetPoint() {
      * @param {Selection} container 
      */
     function drawAnswer(container) {
-        container.selectAll('.answer').remove();
+        // container.selectAll('.answer').remove();
         container.selectAll('.answerLine').remove();
         container.selectAll('.leftAnswer').remove();
         container.selectAll('.rightAnswer').remove();
         if (graph.answer.length === 2) {
-            container.selectAll('.answer').data(graph.answer).join('circle')
-                .classed('answer', true)
-                .attr('cx', d => d.value.x)
-                .attr('cy', d => d.value.y)
-                .attr('r', 7)
-                .attr('stroke', 'red')
-                .attr('fill', 'none');
-            // draw the line
-            // container.selectAll('.answerLine').remove();
+
             container.append('line').classed('answerLine', true)
                 .attr('x1', graph.answer[0].value.x)
                 .attr('x2', graph.answer[1].value.x)
                 .attr('y1', graph.answer[0].value.y)
                 .attr('y2', graph.answer[1].value.y)
-                .attr('stroke', 'green');
+                .attr('stroke', '#e6005c')
+                .attr('stroke-width', 2);
         }
         if (graph.leftAnswer.length === 2) {
-            container.selectAll('.leftAnswer').data(graph.leftAnswer).enter()
-                .append('circle')
-                .classed('answer', true)
-                .attr('cx', d => d.value.x)
-                .attr('cy', d => d.value.y)
-                .attr('r', 7)
-                .attr('stroke', () => graph.childAns === 'left' ? 'green' : 'red')
-                .attr('fill', 'none');
+
+            container.append('line').classed('answerLine', true)
+                .attr('x1', graph.leftAnswer[0].value.x)
+                .attr('x2', graph.leftAnswer[1].value.x)
+                .attr('y1', graph.leftAnswer[0].value.y)
+                .attr('y2', graph.leftAnswer[1].value.y)
+                .attr('stroke', () => graph.childAns === 'left' ? '#00cc00' : 'black')
+                .attr('stroke-width', () => graph.childAns === 'left' ? '3' : '2');
         }
 
         if (graph.rightAnswer.length === 2) {
-            container.selectAll('.rightAnswer').data(graph.rightAnswer).enter()
-                .append('circle')
-                .classed('answer', true)
-                .attr('cx', d => d.value.x)
-                .attr('cy', d => d.value.y)
-                .attr('r', 7)
-                .attr('stroke', () => graph.childAns === 'right' ? 'green' : 'red')
-                .attr('fill', 'none');
+            container.append('line').classed('answerLine', true)
+                .attr('x1', graph.rightAnswer[0].value.x)
+                .attr('x2', graph.rightAnswer[1].value.x)
+                .attr('y1', graph.rightAnswer[0].value.y)
+                .attr('y2', graph.rightAnswer[1].value.y)
+                .attr('stroke', () => graph.childAns === 'right' ? '#00cc00' : 'black')
+                .attr('stroke-width', 2);;
         }
     }
 
-    function split() {
-        let next = [];
-        nodesPointer.forEach(tree => {
-            if (tree.solved) {
-                return;
+    function selfCheck(tree) {
+        let treeValue = tree.elements;
+        if (treeValue.length == 2) {
+            tree.distance = getDistantce(treeValue[0].value, treeValue[1].value);
+            tree.answer = [...tree.elements];
+            tree.solved = true;
+            return;
+        }
+        if (treeValue.length == 3) {
+            let distanceA = getDistantce(treeValue[0].value, treeValue[1].value);
+            let distanceB = getDistantce(treeValue[0].value, treeValue[2].value);
+            let distanceC = getDistantce(treeValue[1].value, treeValue[2].value);
+            let min = Math.min(distanceA, distanceB, distanceC);
+            if (min == distanceA) {
+                tree.distance = distanceA;
+                tree.answer = [treeValue[0], treeValue[1]];
+            } else if (min == distanceB) {
+                tree.distance = distanceB;
+                tree.answer = [treeValue[0], treeValue[2]]
+            } else {
+                tree.distance = distanceC;
+                tree.answer = [treeValue[1], treeValue[2]]
             }
-            let treeValue = tree.elements;
-            if (treeValue.length == 2) {
-                tree.distance = getDistantce(treeValue[0].value, treeValue[1].value);
-                tree.answer = [...tree.elements];
-                tree.solved = true;
-                return;
-            }
-            if (treeValue.length == 3) {
-                let distanceA = getDistantce(treeValue[0].value, treeValue[1].value);
-                let distanceB = getDistantce(treeValue[0].value, treeValue[2].value);
-                let distanceC = getDistantce(treeValue[1].value, treeValue[2].value);
-                let min = Math.min(distanceA, distanceB, distanceC);
-                if (min == distanceA) {
-                    tree.distance = distanceA;
-                    tree.answer = [treeValue[0], treeValue[1]];
-                } else if (min == distanceB) {
-                    tree.distance = distanceB;
-                    tree.answer = [treeValue[0], treeValue[2]]
-                } else {
-                    tree.distance = distanceC;
-                    tree.answer = [treeValue[1], treeValue[2]]
-                }
-                tree.solved = true;
-                return;
-            }
-            let mid = Math.floor((0 + treeValue.length - 1) / 2);
-            let leftChild = new PointNode(treeValue.slice(0, mid + 1), GetUniqueID(), tree);
-            let rightChild = new PointNode(treeValue.slice(mid + 1, treeValue.length), GetUniqueID(), tree);
-            // set split boundary (mid point)
-            tree.setChild(leftChild);
-            tree.setChild(rightChild);
-            tree.boundary = treeValue[mid].value;
-            next.push(leftChild);
-            next.push(rightChild);
-            setUpdate(update + 2);
-            console.log(myTree);
-        })
-        setPointer(next);
-        maxDepth.current = depth(myTree);
+            tree.solved = true;
+            return;
+        }
     }
 
-    function solve() {
-        let next = []
-        nodesPointer.forEach(tree => {
-            if (!tree.solved) {
-                let treeValue = [...tree.elements];
-                let result = getMinDistance(treeValue, 0, treeValue.length - 1);
-                let pair = result[1];
-                tree.distance = result[0];
-                tree.answer = pair;
-                tree.solved = true;
-                next.push(tree);
-            }
-        })
-        setPointer(next);
-        setUpdate(update + 1);
-        maxDepth.current = depth(myTree);
 
-    }
 
     /**
      * Get the Distance between Point A and Point B
@@ -477,10 +467,6 @@ export default function ClosetPoint() {
         }
     }
 
-    function createInterestArea(node) {
-
-    }
-
     /**
      * draw child answer on the parent graph
      * @param {PointNode} node 
@@ -518,10 +504,10 @@ export default function ClosetPoint() {
 
         let Xs = points.map(item => item.value.x);
         let Ys = points.map(item => item.value.y);
-        let highestX = Math.max(...Xs) + 1;
-        let highestY = Math.max(...Ys) + 1;
-        let lowestX = Math.min(...Xs) - 1;
-        let lowestY = Math.min(...Ys) - 1;
+        let highestX = Math.max(...Xs) + 4;
+        let highestY = Math.max(...Ys) + 4;
+        let lowestX = Math.min(...Xs) - 4;
+        let lowestY = Math.min(...Ys) - 4;
         lines.push({ x1: highestX, y1: highestY, x2: highestX, y2: lowestY });
         lines.push({ x1: highestX, y1: lowestY, x2: lowestX, y2: lowestY });
         lines.push({ x1: lowestX, y1: lowestY, x2: lowestX, y2: highestY });
@@ -539,8 +525,8 @@ export default function ClosetPoint() {
     }
 
     function confirmAnswer(node, distance) {
-        if(node.answer.length === 0){
-            node.answer = node.childAns === 'left' ? node.leftAnswer:node.rightAnswer;
+        if (node.answer.length === 0) {
+            node.answer = node.childAns === 'left' ? node.leftAnswer : node.rightAnswer;
             node.distance = distance;
         }
         node.boundary = null;
@@ -550,7 +536,7 @@ export default function ClosetPoint() {
         node.mergeArea = [];
         node.childAns = 'none';
         node.solved = true;
-        
+
     }
 
     /**
@@ -595,13 +581,61 @@ export default function ClosetPoint() {
         return queue;
     }
 
+    function split() {
+        let next = [];
+        nodesPointer.forEach(tree => {
+            if (tree.solved) {
+                return;
+            }
+            // stateStack.push(new TreeState(tree, Object.entries(tree)));
+            let treeValue = tree.elements;
+            let mid = Math.floor((0 + treeValue.length - 1) / 2);
+            let leftChild = new PointNode(treeValue.slice(0, mid + 1), GetUniqueID(), tree);
+            let rightChild = new PointNode(treeValue.slice(mid + 1, treeValue.length), GetUniqueID(), tree);
+            selfCheck(leftChild);
+            selfCheck(rightChild);
+            // set split boundary (mid point)
+            tree.setChild(leftChild);
+            tree.setChild(rightChild);
+            tree.boundary = treeValue[mid].value;
+            next.push(leftChild);
+            next.push(rightChild);
+            setUpdate(update + 2);
+            console.log(myTree);
+        })
+        // stateStack.push(new TreeState(null, null, nodesPointer, setPointer));
+        setPointer(next);
+        maxDepth.current = depth(myTree);
+    }
 
+    function solve() {
+        let next = []
+        nodesPointer.forEach(tree => {
+            if (tree.solved) {
+                return;
+            }
+            // stateStack.push(new TreeState(tree, Object.entries(tree))); // record state
+            let treeValue = [...tree.elements];
+            let result = getMinDistance(treeValue, 0, treeValue.length - 1);
+            let pair = result[1];
+            tree.distance = result[0];
+            tree.answer = pair;
+            tree.solved = true;
+            next.push(tree);
+        })
+        // stateStack.push(new TreeState(null, null, nodesPointer, setPointer));
+        setPointer(next);
+        setUpdate(update + 1);
+        maxDepth.current = depth(myTree);
 
+    }
+
+    /**
+     * Merge Answer in detail style
+     */
     function mergeOne() {
         let head;
-        let value;
         let parent;
-        let child;
         if (mergeQueue.current.length == 0) {
             mergeQueue.current = splitByParentID(getNodesAt(myTree, maxDepth.current));
         }
@@ -627,8 +661,46 @@ export default function ClosetPoint() {
             setMergeBtn(true);
         }
         setUpdate(update + 1);
+    }
+
+    /**
+     * Merge answer in high-level way
+     */
+    function Merge() {
+        let head;
+        let parent;
+        if (mergeQueue.current.length == 0) {
+            mergeQueue.current = splitByParentID(getNodesAt(myTree, maxDepth.current));
+        }
+        head = mergeQueue.current.at(0); // get queue head;
+        parent = head[0].parent // get parent reference;
+        // if (graph === undefined || graph.id !== parent.id) {
+        //     setGraph(parent);
+        // }
+        if (parent.actionQueue === null) {
+            stateStack.push(parent, Object.entries(parent));
+            parent.actionQueue = getActionQueue(parent);
+        }
+        while (parent.actionQueue.length !== 0) {
+            parent.actionQueue.pop();
+        }
+
+        if (parent.solved) {
+            parent.children = [];
+            setGraph(parent);
+            mergeQueue.current.shift();
+        }
+        if (mergeQueue.current.length == 0) {
+            maxDepth.current -= 1;
+        }
+        if (maxDepth.current == 0) {
+            setMergeBtn(true);
+        }
+        setUpdate(update + 1);
 
     }
+
+
 
 
     return (
@@ -649,11 +721,13 @@ export default function ClosetPoint() {
             </div>
             <div>
                 <button onClick={split}>
-                    Split
+                    Divide
                 </button>
-                <button onClick={solve}>Solve</button>
-                <button disabled={mergeBtnOff} onClick={mergeOne}>Merge</button>
-                <button disabled={mergeBtnOff}>Old fansion</button>
+                <button onClick={solve}>Conquer</button>
+                <button disabled={mergeBtnOff} onClick={Merge}>Merge</button>
+                <button disabled={mergeBtnOff} onClick={mergeOne}>Next</button>
+                <button onClick={restart}> Restart</button>
+                {/* <button onClick={back}>Back</button> */}
             </div>
 
 
