@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { select, tree, linkVertical, hierarchy, transition, easeLinear, Selection, color, } from 'd3';
-import { GetUniqueID, getNodesAt, depth, splitByParentID, pointGenerator, sortPoints, ActionQueue, PointNode, Action, TreeState } from './util';
-
+import { select, tree, linkVertical, hierarchy, transition, easeLinear, Selection,} from 'd3';
+import { GetUniqueID, getNodesAt, depth, splitByParentID, pointGenerator, sortPoints} from './Util/util';
+import PointNode from './Util/PointNode';
+import ActionQueue from './Util/ActionQueue';
+import Action from './Util/Action';
 // 
 const staticData = [
     {
@@ -704,7 +706,7 @@ export default function ClosetPoint() {
 
 
     return (
-        <div className='ClosetPoint'>
+        <div className='App'>
             <div id='svgContainer' ref={selfRef}>
                 <svg className='animationArea' width={500} height={500} style={{ border: "1px solid green" }}>
                     <g>

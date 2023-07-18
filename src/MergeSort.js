@@ -1,7 +1,8 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { select, tree, linkVertical, hierarchy, zoom, zoomTransform, transition, easeLinear, } from 'd3';
 import './App.css';
-import { treeNode, GetUniqueID, splitNArray, getNodesAt, refinement, depth, splitByParentID} from './util';
+import { GetUniqueID, splitNArray, getNodesAt, refinement, depth, splitByParentID} from './Util/util';
+import treeNode from './Util/treeNode';
 
 
 const data = [{ key: "key3", value: 3 },

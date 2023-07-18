@@ -17,38 +17,40 @@ export default function Start() {
 
   return (
     <div className='StartPage'>
-        <header className='App-header'>
-          <div>
-            <span>Alg Visualization</span>
-            <span> DC</span>
-          </div>
-          <div className='App-menu'>
-              <span onClick={()=>{navigate("/")}}>
-                Home
-              </span>
-              <span onClick={()=>{navigate("/visualization")}}>
-                Visualization
-              </span>
-              <span onClick={()=>{navigate("/about")}}>
-                About
-              </span>
-          </div>
-          <Avatar style={{cursor:"pointer"}} className='github' alt="Github" src={github}>
+      <header className='App-header'>
+        <div>
+          <span>Alg Visualization</span>
+          <span> DC</span>
+        </div>
+        <div className='App-menu'>
+          <span onClick={() => { navigate("/") }}>
+            Home
+          </span>
+          <span onClick={() => { navigate("/visualization") }}>
+            Visualization
+          </span>
+          <span onClick={() => { navigate("/about") }}>
+            About
+          </span>
+        </div>
+        <Avatar style={{ cursor: "pointer" }} className='github' alt="Github" src={github}>
 
-          </Avatar>
-        </header>
-        <main className='App-content'>
-          <Routes>
-            <Route index element={<HomePage/>} ></Route>
-            <Route path='visualization' element={<Visualization/>}></Route>
-            <Route path='about' element={<About/>}></Route>
-          </Routes>
+        </Avatar>
+      </header>
+      <main className='App-content'>
+        <Routes>
+          <Route index element={<HomePage />} ></Route>
+          <Route path='visualization' element={<Visualization />}></Route>
+          <Route path='mergeSort' element={<MergeSort />}></Route>
+          <Route path='ClosetPairPoint' element={<ClosetPoint />}></Route>
+          <Route path='about' element={<About />}></Route>
+        </Routes>
 
-        </main>
-        <footer className='App-footer'>
-          <div className='splitLine'></div>
-          Divide and Conquer Algorithm Visualization @ Yuchen Pu
-        </footer>
+      </main>
+      <footer className='App-footer'>
+        <div className='splitLine'></div>
+        Divide and Conquer Algorithm Visualization @ Yuchen Pu
+      </footer>
     </div>
   )
 }
