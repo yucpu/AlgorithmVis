@@ -1,0 +1,22 @@
+.algLib{
+    height: inherit;
+    width: inherit;
+}
+
+.algContainer{
+    display: flex;
+    flex-flow: row wrap;
+    gap:2vw;
+    padding: 50px;
+}
+
+.algVis{
+    width: 15vw;
+    height: 15vw;
+   
+}
+
+.cardImage{
+    height: 80%;
+    object-fit: cover;
+}

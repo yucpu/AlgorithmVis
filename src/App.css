@@ -93,6 +93,7 @@
 .App-content{
   min-height: 82vh;
   border: #61dafb;
+  height: 82vh;
 }
 
 .splitLine{
