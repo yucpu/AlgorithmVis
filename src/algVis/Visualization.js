@@ -22,7 +22,7 @@ export default function Visualization() {
               />
 
               <CardContent>
-                <Typography gutterBottom variant="h6">
+                <Typography variant="subtitle1">
                   {item.name}
                 </Typography>
               </CardContent>

@@ -1,8 +1,9 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { select, tree, linkVertical, hierarchy, zoom, zoomTransform, transition, easeLinear, } from 'd3';
+import { select, tree, linkVertical, hierarchy, zoom, zoomTransform, transition, easeLinear, zoomIdentity, } from 'd3';
 import './App.css';
 import { GetUniqueID, splitNArray, getNodesAt, refinement, depth, splitByParentID} from './Util/util';
 import treeNode from './Util/treeNode';
+import { Button } from '@mui/material';
 
 
 const data = [{ key: "key3", value: 3 },
@@ -28,7 +29,7 @@ function MergeSort() {
   let [update, setUpdate] = useState(1);
   let [selected, setSelect] = useState([]);
   let [nodesPointer, setPointer] = useState([myTree]);
-  let [zoomState, setZoom] = useState({ k: 1, x: 0, y: 10 });
+  let [zoomState, setZoom] = useState({ k: 1, x: 0, y: 0 });
   let [mergeBtnOff, setMergeBtn] = useState(true);
 
 
@@ -48,10 +49,11 @@ function MergeSort() {
     const root = hierarchy(myTree);
     d3treeLayout(root);
     refinement(root, 100);
+
+    svg.call(svgZoom.transform, zoomIdentity).on("dblclick.zoom", null);
     svg.call(svgZoom).on("dblclick.zoom", null);
 
     svg.select('g').attr("transform", "translate(" + zoomState.x + "," + zoomState.y + ") scale(" + zoomState.k + ")");
-
     svg.select("g").selectAll(".gnode")
       .data(root.descendants())
       .join(appendNode2, updateNode2, removeNode)
@@ -65,6 +67,18 @@ function MergeSort() {
         exit => exit.remove())
 
   }, [update])
+
+  function restart(){
+    myTree.reset();
+    maxDepth.current = depth(myTree);
+    setMergeBtn(true);
+    setPointer([myTree]);
+    setZoom({ k: 1, x: 0, y: 0 });
+    // select(selfRef.current).select('svg').select('g')
+    // .attr("transform", "translate(" + 0 + "," + 0 + ") scale(" + 1 + ")")
+    setUpdate(update + 1);
+    
+  }
 
   function sourceRefine(node) {
     let sourceX = node.source.x;
@@ -98,10 +112,6 @@ function MergeSort() {
       .attr("stroke",(d)=>(d.data.solved ? 'green' : 'red'))
       .attr("transform", (d) => { return `translate(${d.x - d.data.elements.length * 20 / 2},${d.y}) scale(1)`; })
       .on("click", (event, data) => { clickHandler(event, data) })
-
-
-
-
   }
 
   /**
@@ -164,12 +174,6 @@ function MergeSort() {
   }
 
 
-  // function updateNode(update) {
-  //   return update
-  //     .attr("cx", d => d.x)
-  //     .attr("cy", d => d.y)
-  //     .on("click", (event, data) => { clickHandler(event, data) });
-  // }
 
   function removeNode(exit) {
     return exit.remove();
@@ -198,8 +202,8 @@ function MergeSort() {
   function zoomHandler(svg) {
     let aa = zoomTransform(svg.node());
     select("g").attr("transform",
-      "translate(" + aa.x + "," + aa.y + ")" + " scale(" + aa.k + ")");
-    setZoom({ k: aa.k, x: aa.x, y: aa.y });
+      "translate(" + aa.x + "," + aa.y + ")" + " scale(" + aa.k + ")"); 
+    setZoom({k:aa.k, x:aa.x, y:aa.y})
   }
 
   function clickHandler(event, data) {
@@ -371,7 +375,7 @@ function MergeSort() {
   return (
     <div className='App'>
       <div id='svgContainer' ref={selfRef}>
-        <svg className='animationArea' width={500} height={500} style={{ border: "1px solid green" }}>
+        <svg className='animationArea' width={500} height={500}>
           <g>
 
           </g>
@@ -381,12 +385,13 @@ function MergeSort() {
 
       <div>
         <div>Current Node:{selected.map(layer1 => layer1.data.elements.map(layer2 => layer2.value) + " / ")}</div>
-        <button onClick={split}>
-          Split
-        </button>
-        <button onClick={solve}>Solve</button>
-        <button onClick={merge} disabled={mergeBtnOff}>Merge</button>
-        <button onClick={mergeOne} disabled={mergeBtnOff}>Old fansion</button>
+        <Button onClick={split}>
+          Divide
+        </Button>
+        <Button onClick={solve}>Conquer</Button>
+        <Button onClick={merge} disabled={mergeBtnOff}>Merge</Button>
+        <Button onClick={mergeOne} disabled={mergeBtnOff}>Next</Button>
+        <Button onClick={restart} >Restart</Button>
       </div>
 
     </div>

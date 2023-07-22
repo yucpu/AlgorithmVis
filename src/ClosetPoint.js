@@ -4,6 +4,7 @@ import { GetUniqueID, getNodesAt, depth, splitByParentID, pointGenerator, sortPo
 import PointNode from './Util/PointNode';
 import ActionQueue from './Util/ActionQueue';
 import Action from './Util/Action';
+import { Button } from '@mui/material';
 // 
 const staticData = [
     {
@@ -542,7 +543,6 @@ export default function ClosetPoint() {
 
     function confirmAnswer(node, distance) {
         node.possibleAnswer = [];
-        console.log(node.distance, distance);
         if(node.distance < distance){
             node.answer = node.closet;
         }
@@ -589,7 +589,7 @@ export default function ClosetPoint() {
                 possibleAnswer.splice(i, 1);
             }
         }
-        console.log(possibleAnswer);
+       
         queue.push(new Action('drawAnswer', [node, leftPart.answer, rightPart.answer], drawChildAns))
         queue.push(new Action('MarkAnswer', [node, mark], selectChild))
         queue.push(new Action('mergeLine', [node, [leftX, rightX]], drawMergeLine))
@@ -624,7 +624,7 @@ export default function ClosetPoint() {
             next.push(leftChild);
             next.push(rightChild);
             setUpdate(update + 2);
-            console.log(myTree);
+           
         })
         // stateStack.push(new TreeState(null, null, nodesPointer, setPointer));
         setPointer(next);
@@ -743,14 +743,14 @@ export default function ClosetPoint() {
 
             </div>
             <div>
-                <button onClick={split}>
+                <Button onClick={split}>
                     Divide
-                </button>
-                <button onClick={solve}>Conquer</button>
-                <button disabled={mergeBtnOff} onClick={Merge}>Merge</button>
-                <button disabled={mergeBtnOff} onClick={mergeOne}>Next</button>
-                <button onClick={restart}> Restart</button>
-                {/* <button onClick={back}>Back</button> */}
+                </Button>
+                <Button onClick={solve}>Conquer</Button>
+                <Button disabled={mergeBtnOff} onClick={Merge}>Merge</Button>
+                <Button disabled={mergeBtnOff} onClick={mergeOne}>Next</Button>
+                <Button onClick={restart}> Restart</Button>
+                {/* <Button onClick={back}>Back</Button> */}
             </div>
 
 

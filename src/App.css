@@ -1,5 +1,6 @@
 .App {
   text-align: center;
+  padding-top: 10px;
 }
 
 
@@ -93,7 +94,7 @@
 .App-content{
   min-height: 82vh;
   border: #61dafb;
-  height: 82vh;
+  /* height: 82vh; */
 }
 
 .splitLine{
