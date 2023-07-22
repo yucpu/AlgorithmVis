@@ -82,7 +82,7 @@ export default function ClosetPoint() {
     let data = useRef(staticData).current;
     let myTree = useRef(new PointNode(data, GetUniqueID(), null)).current;
     let stateStack = useRef([]).current;
-    let [graph, setGraph] = useState();
+    let [graph, setGraph] = useState(myTree);
     const nodeTransition = transition().duration(200).ease(easeLinear);
     let mergeQueue = useRef([]);
     let maxDepth = useRef(depth(myTree));
@@ -99,7 +99,7 @@ export default function ClosetPoint() {
         setMergeBtn(true);
         setPointer([myTree]);
         setUpdate(1);
-        setGraph(undefined);
+        setGraph(myTree);
     }
 
     function back() {
@@ -152,6 +152,8 @@ export default function ClosetPoint() {
             container.selectAll('line').remove();
         }
     }, [graph, update])
+
+    
 
 
     /**
@@ -367,6 +369,16 @@ export default function ClosetPoint() {
                 .attr('stroke', () => graph.childAns === 'right' ? '#00cc00' : 'black')
                 .attr('stroke-width', 2);;
         }
+
+        if (graph.possibleAnswer.length === 2) {
+            container.append('line').classed('answerLine', true)
+                .attr('x1', graph.possibleAnswer[0].value.x)
+                .attr('x2', graph.possibleAnswer[1].value.x)
+                .attr('y1', graph.possibleAnswer[0].value.y)
+                .attr('y2', graph.possibleAnswer[1].value.y)
+                .attr('stroke', '#00cccc')
+                .attr('stroke-width', 2);;
+        }
     }
 
     function selfCheck(tree) {
@@ -520,14 +532,21 @@ export default function ClosetPoint() {
 
     function selectAnswer(node, pointA, pointB) {
         let distance = getDistantce(pointA.value, pointB.value);
+        node.possibleAnswer = [pointA, pointB];
         if (node.distance > distance) {
+            node.closet = [pointA, pointB];
             node.answer = [pointA, pointB];
             node.distance = distance;
         }
     }
 
     function confirmAnswer(node, distance) {
-        if (node.answer.length === 0) {
+        node.possibleAnswer = [];
+        console.log(node.distance, distance);
+        if(node.distance < distance){
+            node.answer = node.closet;
+        }
+        if (node.answer.length === 0 || node.distance > distance) {
             node.answer = node.childAns === 'left' ? node.leftAnswer : node.rightAnswer;
             node.distance = distance;
         }
@@ -570,12 +589,14 @@ export default function ClosetPoint() {
                 possibleAnswer.splice(i, 1);
             }
         }
+        console.log(possibleAnswer);
         queue.push(new Action('drawAnswer', [node, leftPart.answer, rightPart.answer], drawChildAns))
         queue.push(new Action('MarkAnswer', [node, mark], selectChild))
         queue.push(new Action('mergeLine', [node, [leftX, rightX]], drawMergeLine))
         queue.push(new Action('drawInterestArea', [node, possibleAnswer], drawInterestArea))
-        for (let i = 0; i < possibleAnswer.length; i++) {
-            for (let j = i + 1; j < possibleAnswer.length - 1; j++) {
+        for (let i = 0; i < possibleAnswer.length -1; i++) {
+            for (let j = i+1; j < possibleAnswer.length; j++) {
+                
                 queue.push(new Action('iterateAnswers', [node, possibleAnswer[i], possibleAnswer[j]], selectAnswer))
             }
         }
@@ -709,7 +730,7 @@ export default function ClosetPoint() {
         <div className='App'>
             <div id='svgContainer' ref={selfRef}>
                 <svg className='animationArea' width={500} height={500} style={{ border: "1px solid green" }}>
-                    <g>
+                    <g transform='translate(0, 10)'>
 
                     </g>
                 </svg>

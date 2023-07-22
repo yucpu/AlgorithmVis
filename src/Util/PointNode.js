@@ -15,6 +15,8 @@ export default class PointNode extends treeNode{
         this.childAns = 'none';
         this.leftAnswer = [];
         this.rightAnswer = [];
+        this.possibleAnswer = [];
+        this.closet = [];
 
     }
 
@@ -33,5 +35,7 @@ export default class PointNode extends treeNode{
         this.childAns = 'none';
         this.leftAnswer = [];
         this.rightAnswer = [];
+        this.possibleAnswer = [];
+        this.closet = [];
     }
 }
