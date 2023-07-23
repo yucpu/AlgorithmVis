@@ -1,6 +1,6 @@
 import React from 'react'
-import ClosetPoint from './ClosetPoint';
-import MergeSort from './MergeSort';
+import ClosetPoint from './algorithm/ClosetPoint';
+import MergeSort from './algorithm/MergeSort';
 import '../src/App.css';
 import { Avatar, Link, Menu, MenuItem } from '@mui/material';
 import { NavLink, Route, Routes, useNavigate } from 'react-router-dom';
