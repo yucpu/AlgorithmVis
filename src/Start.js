@@ -39,11 +39,11 @@ export default function Start() {
       </header>
       <main className='App-content'>
         <Routes>
-          <Route index element={<HomePage />} ></Route>
-          <Route path='visualization' element={<Visualization />}></Route>
-          <Route path='mergeSort' element={<MergeSort />}></Route>
-          <Route path='ClosetPairPoint' element={<ClosetPoint />}></Route>
-          <Route path='about' element={<About />}></Route>
+          <Route exact path='/' element={<HomePage />} ></Route>
+          <Route path='/visualization' element={<Visualization />}></Route>
+          <Route path='/mergeSort' element={<MergeSort />}></Route>
+          <Route path='/ClosetPairPoint' element={<ClosetPoint />}></Route>
+          <Route path='/about' element={<About />}></Route>
         </Routes>
 
       </main>
