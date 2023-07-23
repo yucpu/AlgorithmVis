@@ -2,7 +2,7 @@
   "name": "d3study",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://yucpu.github.io/AlgorithmVis",
+  "homepage": "https://yucpu.github.io/AlgorithmVis/#/",
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
@@ -24,7 +24,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "onekey":"npm run build & serve -s build"
   },
   "eslintConfig": {
     "extends": [
