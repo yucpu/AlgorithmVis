@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { select, tree, linkVertical, hierarchy, transition, easeLinear, Selection,} from 'd3';
-import { GetUniqueID, getNodesAt, depth, splitByParentID, pointGenerator, sortPoints} from './Util/util';
-import PointNode from './Util/PointNode';
-import ActionQueue from './Util/ActionQueue';
-import Action from './Util/Action';
+import { GetUniqueID, getNodesAt, depth, splitByParentID, pointGenerator, sortPoints} from '../Util/util';
+import PointNode from '../Util/PointNode';
+import ActionQueue from '../Util/ActionQueue';
+import Action from '../Util/Action';
 import { Button } from '@mui/material';
 // 
 const staticData = [

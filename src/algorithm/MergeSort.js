@@ -1,8 +1,8 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { select, tree, linkVertical, hierarchy, zoom, zoomTransform, transition, easeLinear, zoomIdentity, } from 'd3';
 import './App.css';
-import { GetUniqueID, splitNArray, getNodesAt, refinement, depth, splitByParentID} from './Util/util';
-import treeNode from './Util/treeNode';
+import { GetUniqueID, splitNArray, getNodesAt, refinement, depth, splitByParentID} from '../Util/util';
+import treeNode from '../Util/treeNode';
 import { Button } from '@mui/material';
 
 
