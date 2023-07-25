@@ -1,9 +1,10 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { select, tree, linkVertical, hierarchy, zoom, zoomTransform, transition, easeLinear, zoomIdentity, } from 'd3';
 
-import { GetUniqueID, splitNArray, getNodesAt, refinement, depth, splitByParentID} from '../Util/util';
+import { GetUniqueID, splitNArray, getNodesAt, refinement, depth, splitByParentID } from '../Util/util';
 import treeNode from '../Util/treeNode';
 import { Button } from '@mui/material';
+import { Steps } from 'intro.js-react';
 
 
 const data = [{ key: "key3", value: 3 },
@@ -17,7 +18,32 @@ const data = [{ key: "key3", value: 3 },
 { key: "key11", value: 11 },];
 
 
-
+const tours = [
+  {
+    element: '.animationArea',
+    intro: "This panel is used to display a tree layout that shows the particular state of the algorithm. Each node represents a partial problem of the original one."
+  },
+  {
+    element: ".divide",
+    intro: "This is a High-level Button that is used to split Current problem"
+  },
+  {
+    element: ".conquer",
+    intro: "This is a High-level Button that is used to solve current problem directly"
+  },
+  {
+    element: ".merge",
+    intro: "This is a High-level Button that is used to merge solutions you got"
+  },
+  {
+    element: ".next",
+    intro: "This is a Low-level Button that is used to inspect the detailed steps of merge"
+  },
+  {
+    element: ".restart",
+    intro: "This button is used to restart the animation. You can watch the visualization again if you want"
+  }
+]
 
 
 function MergeSort() {
@@ -31,14 +57,16 @@ function MergeSort() {
   let [nodesPointer, setPointer] = useState([myTree]);
   let [zoomState, setZoom] = useState({ k: 1, x: 0, y: 0 });
   let [mergeBtnOff, setMergeBtn] = useState(true);
+  let [guide, setGuide] = useState(tours);
+  let [stepsEnabled, setStep] = useState(true); 
 
 
 
-  useEffect(()=>{
-    if(maxDepth.current != 0){
+  useEffect(() => {
+    if (maxDepth.current != 0) {
       setMergeBtn(!getNodesAt(myTree, maxDepth.current).every(tree => tree.solved))
     }
-  },[maxDepth.current, update])
+  }, [maxDepth.current, update])
 
   useEffect(() => {
     const app = select(selfRef.current);
@@ -68,7 +96,7 @@ function MergeSort() {
 
   }, [update])
 
-  function restart(){
+  function restart() {
     myTree.reset();
     maxDepth.current = depth(myTree);
     setMergeBtn(true);
@@ -77,7 +105,7 @@ function MergeSort() {
     // select(selfRef.current).select('svg').select('g')
     // .attr("transform", "translate(" + 0 + "," + 0 + ") scale(" + 1 + ")")
     setUpdate(update + 1);
-    
+
   }
 
   function sourceRefine(node) {
@@ -109,7 +137,7 @@ function MergeSort() {
   function updateNode2(update) {
 
     return update
-      .attr("stroke",(d)=>(d.data.solved ? 'green' : 'red'))
+      .attr("stroke", (d) => (d.data.solved ? 'green' : 'red'))
       .attr("transform", (d) => { return `translate(${d.x - d.data.elements.length * 20 / 2},${d.y}) scale(1)`; })
       .on("click", (event, data) => { clickHandler(event, data) })
   }
@@ -202,8 +230,8 @@ function MergeSort() {
   function zoomHandler(svg) {
     let aa = zoomTransform(svg.node());
     select("g").attr("transform",
-      "translate(" + aa.x + "," + aa.y + ")" + " scale(" + aa.k + ")"); 
-    setZoom({k:aa.k, x:aa.x, y:aa.y})
+      "translate(" + aa.x + "," + aa.y + ")" + " scale(" + aa.k + ")");
+    setZoom({ k: aa.k, x: aa.x, y: aa.y })
   }
 
   function clickHandler(event, data) {
@@ -272,7 +300,7 @@ function MergeSort() {
     let tmp = [...tree.elements]
     tmp.splice(0, 1);
     tree.elements = tmp;
-    if(tree.elements.length == 0){
+    if (tree.elements.length == 0) {
       tree.parent.removeChild(tree.id);
     }
   }
@@ -287,19 +315,19 @@ function MergeSort() {
     let value = Number.POSITIVE_INFINITY;
     let index;
     let element;
-    
 
-    for(let i = 0; i < treeNodes.length; i++ ){
-      if(treeNodes[i].elements.length == 0){
+
+    for (let i = 0; i < treeNodes.length; i++) {
+      if (treeNodes[i].elements.length == 0) {
         continue;
-      }else if(treeNodes[i].elements[0].value < value){
+      } else if (treeNodes[i].elements[0].value < value) {
         value = treeNodes[i].elements[0].value;
         element = treeNodes[i].elements[0];
         index = i;
       }
     }
 
-    if(index == undefined){
+    if (index == undefined) {
       return [];
     }
 
@@ -317,7 +345,7 @@ function MergeSort() {
     }
     head = mergeQueue.current.at(0); // get queue head;
     parent = head[0].parent // get parent reference;
-    if(!parent.solved){
+    if (!parent.solved) {
       parent.elements = [];
       parent.solved = true;
     }
@@ -328,17 +356,17 @@ function MergeSort() {
     removeValue(child); // remove value from child 
     insertValue(parent, value[1]) // insert value to parent
 
-    if(head.every(node=>node.elements.length == 0)){
+    if (head.every(node => node.elements.length == 0)) {
       mergeQueue.current.shift();
     }
 
-    if(mergeQueue.current.length ==0){
+    if (mergeQueue.current.length == 0) {
       maxDepth.current -= 1;
     }
 
     setUpdate(update + 1);
 
-    if(maxDepth.current == 0){
+    if (maxDepth.current == 0) {
       setMergeBtn(true);
     }
 
@@ -349,24 +377,24 @@ function MergeSort() {
       mergeQueue.current = splitByParentID(getNodesAt(myTree, maxDepth.current));
     }
 
-    while(mergeQueue.current.length > 0){
+    while (mergeQueue.current.length > 0) {
       let head = mergeQueue.current.shift();
-      while(head.some(node=>node.elements.length != 0)){
+      while (head.some(node => node.elements.length != 0)) {
         let parent = head[0].parent // get parent reference;
-        if(!parent.solved){
+        if (!parent.solved) {
           parent.elements = [];
           parent.solved = true;
         }
-    
+
         let value = getValue(head); // get value object;
         let child = head[value[0]]; // get child reference;
-    
+
         removeValue(child); // remove value from child 
         insertValue(parent, value[1]) // insert value to parent
       }
     }
     maxDepth.current -= 1;
-    if(maxDepth.current == 0){
+    if (maxDepth.current == 0) {
       setMergeBtn(true);
     }
     setUpdate(update + 1);
@@ -374,6 +402,12 @@ function MergeSort() {
 
   return (
     <div className='App'>
+      <Steps
+        enabled={stepsEnabled}
+        steps={guide}
+        initialStep={0}
+        onExit={() => { setStep(false) }}
+      ></Steps>
       <div id='svgContainer' ref={selfRef}>
         <svg className='animationArea' width={500} height={500}>
           <g>
@@ -385,13 +419,13 @@ function MergeSort() {
 
       <div>
         <div>Current Node:{selected.map(layer1 => layer1.data.elements.map(layer2 => layer2.value) + " / ")}</div>
-        <Button onClick={split}>
+        <Button className='divide' onClick={split}>
           Divide
         </Button>
-        <Button onClick={solve}>Conquer</Button>
-        <Button onClick={merge} disabled={mergeBtnOff}>Merge</Button>
-        <Button onClick={mergeOne} disabled={mergeBtnOff}>Next</Button>
-        <Button onClick={restart} >Restart</Button>
+        <Button className='conquer' onClick={solve}>Conquer</Button>
+        <Button className='merge' onClick={merge} disabled={mergeBtnOff}>Merge</Button>
+        <Button className='next' onClick={mergeOne} disabled={mergeBtnOff}>Next</Button>
+        <Button className='restart' onClick={restart} >Restart</Button>
       </div>
 
     </div>

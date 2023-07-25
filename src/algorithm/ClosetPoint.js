@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { select, tree, linkVertical, hierarchy, transition, easeLinear, Selection,} from 'd3';
-import { GetUniqueID, getNodesAt, depth, splitByParentID, pointGenerator, sortPoints} from '../Util/util';
+import { select, tree, linkVertical, hierarchy, transition, easeLinear, Selection, } from 'd3';
+import { GetUniqueID, getNodesAt, depth, splitByParentID, pointGenerator, sortPoints } from '../Util/util';
 import PointNode from '../Util/PointNode';
 import ActionQueue from '../Util/ActionQueue';
 import Action from '../Util/Action';
 import { Button } from '@mui/material';
+import { Steps} from 'intro.js-react';
+import "intro.js/introjs.css";
 // 
 const staticData = [
     {
@@ -78,6 +80,37 @@ const staticData = [
         }
     }]
 
+const tours = [
+    {
+        element: '.animationArea',
+        intro: "This panel is used to display a tree layout that shows the particular state of the algorithm. Each node represents a partial problem of the original one."
+    },
+    {
+        element : ".DetailArea",
+        intro: "This panel is used to display a graph inside a particualr node. you can click a node in left panel. Then you can inspect graph in this panel."
+    },
+    {
+        element:".divide",
+        intro: "This is a High-level Button that is used to split Current problem"
+    },
+    {
+        element:".conquer",
+        intro: "This is a High-level Button that is used to solve current problem directly"
+    },
+    {
+        element:".merge",
+        intro: "This is a High-level Button that is used to merge solutions you got"
+    },
+    {
+        element:".next",
+        intro: "This is a Low-level Button that is used to inspect the detailed steps of merge"
+    },
+    {
+        element:".restart",
+        intro: "This button is used to restart the animation. You can watch the visualization again if you want"
+    }
+]
+
 export default function ClosetPoint() {
     let selfRef = useRef();
     let data = useRef(staticData).current;
@@ -92,6 +125,8 @@ export default function ClosetPoint() {
     let [nodesPointer, setPointer] = useState([myTree]);
     //let [zoomState, setZoom] = useState({ k: 1, x: 0, y: 10 });
     let [mergeBtnOff, setMergeBtn] = useState(true);
+    let [guide, setGuide] = useState(tours);
+    let [stepsEnabled, setStep] = useState(true); 
 
 
     function restart() {
@@ -110,10 +145,10 @@ export default function ClosetPoint() {
             return;
         }
         let state;
-        do{
+        do {
             state = stateStack.pop();
             state.rollback();
-        }while(state.target === null);
+        } while (state.target === null);
 
         state.rollback();
         if (state.target !== null) {
@@ -154,7 +189,7 @@ export default function ClosetPoint() {
         }
     }, [graph, update])
 
-    
+
 
 
     /**
@@ -543,7 +578,7 @@ export default function ClosetPoint() {
 
     function confirmAnswer(node, distance) {
         node.possibleAnswer = [];
-        if(node.distance < distance){
+        if (node.distance < distance) {
             node.answer = node.closet;
         }
         if (node.answer.length === 0 || node.distance > distance) {
@@ -589,14 +624,14 @@ export default function ClosetPoint() {
                 possibleAnswer.splice(i, 1);
             }
         }
-       
+
         queue.push(new Action('drawAnswer', [node, leftPart.answer, rightPart.answer], drawChildAns))
         queue.push(new Action('MarkAnswer', [node, mark], selectChild))
         queue.push(new Action('mergeLine', [node, [leftX, rightX]], drawMergeLine))
         queue.push(new Action('drawInterestArea', [node, possibleAnswer], drawInterestArea))
-        for (let i = 0; i < possibleAnswer.length -1; i++) {
-            for (let j = i+1; j < possibleAnswer.length; j++) {
-                
+        for (let i = 0; i < possibleAnswer.length - 1; i++) {
+            for (let j = i + 1; j < possibleAnswer.length; j++) {
+
                 queue.push(new Action('iterateAnswers', [node, possibleAnswer[i], possibleAnswer[j]], selectAnswer))
             }
         }
@@ -624,7 +659,7 @@ export default function ClosetPoint() {
             next.push(leftChild);
             next.push(rightChild);
             setUpdate(update + 2);
-           
+
         })
         // stateStack.push(new TreeState(null, null, nodesPointer, setPointer));
         setPointer(next);
@@ -728,6 +763,14 @@ export default function ClosetPoint() {
 
     return (
         <div className='App'>
+            <Steps
+                enabled={stepsEnabled}
+                steps={guide}
+                initialStep={0}
+                onExit={()=>{setStep(false)}}
+            >
+
+            </Steps>
             <div id='svgContainer' ref={selfRef}>
                 <svg className='animationArea' width={500} height={500} style={{ border: "1px solid green" }}>
                     <g transform='translate(0, 10)'>
@@ -743,13 +786,13 @@ export default function ClosetPoint() {
 
             </div>
             <div>
-                <Button onClick={split}>
+                <Button className='divide' onClick={split}>
                     Divide
                 </Button>
-                <Button onClick={solve}>Conquer</Button>
-                <Button disabled={mergeBtnOff} onClick={Merge}>Merge</Button>
-                <Button disabled={mergeBtnOff} onClick={mergeOne}>Next</Button>
-                <Button onClick={restart}> Restart</Button>
+                <Button className='conquer' onClick={solve}>Conquer</Button>
+                <Button className='merge' disabled={mergeBtnOff} onClick={Merge}>Merge</Button>
+                <Button className='next' disabled={mergeBtnOff} onClick={mergeOne}>Next</Button>
+                <Button className='restart' onClick={restart}> Restart</Button>
                 {/* <Button onClick={back}>Back</Button> */}
             </div>
 
