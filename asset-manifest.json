@@ -1,17 +1,14 @@
 {
   "files": {
-    "main.css": "/AlgorithmVis/static/css/main.35ba1af2.css",
-    "main.js": "/AlgorithmVis/static/js/main.aacdd4cf.js",
-    "static/js/787.fe0e3730.chunk.js": "/AlgorithmVis/static/js/787.fe0e3730.chunk.js",
+    "main.css": "/AlgorithmVis/static/css/main.4c4c6b29.css",
+    "main.js": "/AlgorithmVis/static/js/main.67bd4833.js",
+    "static/js/27.198c3876.chunk.js": "/AlgorithmVis/static/js/27.198c3876.chunk.js",
     "static/media/closet_pair.png": "/AlgorithmVis/static/media/closet_pair.0876385c4194d292b8ac.png",
     "static/media/introduction.md": "/AlgorithmVis/static/media/introduction.d1e583be8d4056298955.md",
-    "index.html": "/AlgorithmVis/index.html",
-    "main.35ba1af2.css.map": "/AlgorithmVis/static/css/main.35ba1af2.css.map",
-    "main.aacdd4cf.js.map": "/AlgorithmVis/static/js/main.aacdd4cf.js.map",
-    "787.fe0e3730.chunk.js.map": "/AlgorithmVis/static/js/787.fe0e3730.chunk.js.map"
+    "index.html": "/AlgorithmVis/index.html"
   },
   "entrypoints": [
-    "static/css/main.35ba1af2.css",
-    "static/js/main.aacdd4cf.js"
+    "static/css/main.4c4c6b29.css",
+    "static/js/main.67bd4833.js"
   ]
 }
