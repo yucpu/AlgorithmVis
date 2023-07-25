@@ -20,6 +20,10 @@ const data = [{ key: "key3", value: 3 },
 
 const tours = [
   {
+    element: ".animationArea",
+    intro: "In the Sorting Problem, we are given an unsorted array of elements. Our task is to sort them using various methods. For this project, we are implementing the Merge Sort algorithm to sort an unsorted array of integers. Enjoy!"
+  },
+  {
     element: '.animationArea',
     intro: "This panel is used to display a tree layout that shows the particular state of the algorithm. Each node represents a partial problem of the original one."
   },

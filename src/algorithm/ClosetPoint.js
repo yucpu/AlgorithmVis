@@ -82,6 +82,10 @@ const staticData = [
 
 const tours = [
     {
+        element: ".animationArea",
+        intro: "In this problem, we are given a set of pairs of points in 2-Dimension. The intuitive approach is to compare the distance between all combinations of points and then find the closest pair. However, there is a more efficient way to tackle this task. Let's explore our approach and enjoy the process!"
+    },
+    {
         element: '.animationArea',
         intro: "This panel is used to display a tree layout that shows the particular state of the algorithm. Each node represents a partial problem of the original one."
     },
