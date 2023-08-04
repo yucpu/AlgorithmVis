@@ -1,0 +1,54 @@
+Algorithm 1: MergeSort(Data)
+    If Data is sorted Or Data only have one element:
+        Return Data
+    Else:
+        Declare Result = []
+        Declare Part1 = Call MergeSort(Data[0, MidIndex]) 
+        Declare Part2 = Call MergeSort(Data[MidIndex+1, LastInex])
+
+        Iterate Each Element of Part1 AND Part2:
+            If Element of Part1 Greater Than Part2:
+                Push Element of Part2 into Result list
+            Else Element of Part1 Smaller or Equal to Part2:
+                Push Element of Part1 into Result list
+        
+        If Part1 or Part2 still have never visited Element:
+            Directly Push rest Elements of Part1 or Part2 into Result
+        Return Result 
+
+Algorithm 2： ClosestPoints(Data):
+    Requirement:
+        Data is collection of points.
+        For efficient design, Data need to be sorted by point's x value.
+        each Point has unique coordination in 2d space.
+    If Data only have two points:
+        Answer = (Point1, Point2)     
+        Return Answer
+    Else If Data only have three points:
+        Find Most closest pair of points from three points
+        Answer = closest pair of points
+        Return Answer
+    Else:   
+        Divide the data from the middle in two sub-collections
+        part1 = Call ClosestPoints(Sub_data_one);
+        part2 = Call ClosetPoints(Sub_data_two);
+        Answer = Chose the closet one from part1 AND part2
+        
+        Using this Answer to make boundary area at right edge of part1 
+        and left edge of part2.
+
+        EdgePoints = Find all points in the boundary area
+        check whether EdgePoints exist a more closer pair than old one
+        If there exist a more closer pair:
+            Update ClosestPair
+        Return ClosestPair
+    
+
+
+
+
+
+
+
+
+

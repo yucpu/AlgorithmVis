@@ -115,7 +115,7 @@ const tours = [
     }
 ]
 
-export default function ClosetPoint() {
+export default function ClosestPoint() {
     let selfRef = useRef();
     let data = useRef(staticData).current;
     let myTree = useRef(new PointNode(data, GetUniqueID(), null)).current;

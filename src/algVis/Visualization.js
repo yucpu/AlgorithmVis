@@ -4,7 +4,7 @@ import { Card, CardActionArea, CardContent, CardMedia, Typography } from '@mui/m
 import { useNavigate } from 'react-router-dom';
 
 const alg = [{ name: "Merge Sort", img: require('../assets/Sort.png'), path:"/mergeSort"},
-{ name: "Closet Pair Point", img: require("../assets/closet_pair.png"), path:"/closetPairPoint"}];
+{ name: "Closest Pair Point", img: require("../assets/closet_pair.png"), path:"/closetPairPoint"}];
 
 export default function Visualization() {
   const navigate = useNavigate();

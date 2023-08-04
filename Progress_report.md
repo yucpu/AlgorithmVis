@@ -38,3 +38,4 @@ In the past month, we successfully developed a prototype of two scheduled divide
 <p style="text-align:justify">
 Moving forward, our next step involves incorporating UI design into the application. We will enhance the user interface to improve the overall user experience. Additionally, we will design the questionnaire questions strategically to gather feedback from the users, specifically targeting the evaluation of the usefulness of high-level control in algorithm visualization. This feedback will play a crucial role in our evaluation process. Finally, we will commence writing the final dissertation, incorporating our research findings, analysis, and conclusions.
 </p>
+

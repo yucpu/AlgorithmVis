@@ -1,5 +1,5 @@
 import React from 'react'
-import ClosetPoint from './algorithm/ClosetPoint';
+import ClosestPoint from './algorithm/ClosestPair';
 import MergeSort from './algorithm/MergeSort';
 import '../src/App.css';
 import { Avatar, Link, Menu, MenuItem } from '@mui/material';
@@ -42,7 +42,7 @@ export default function Start() {
           <Route exact path='/' element={<HomePage />} ></Route>
           <Route path='visualization' element={<Visualization />}></Route>
           <Route path='mergeSort' element={<MergeSort />}></Route>
-          <Route path='ClosetPairPoint' element={<ClosetPoint />}></Route>
+          <Route path='ClosetPairPoint' element={<ClosestPoint />}></Route>
           <Route path='about' element={<About />}></Route>
         </Routes>
 
