@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/AlgorithmVis/static/css/main.4c4c6b29.css",
-    "main.js": "/AlgorithmVis/static/js/main.67bd4833.js",
+    "main.js": "/AlgorithmVis/static/js/main.0deee17f.js",
     "static/js/27.198c3876.chunk.js": "/AlgorithmVis/static/js/27.198c3876.chunk.js",
     "static/media/closet_pair.png": "/AlgorithmVis/static/media/closet_pair.0876385c4194d292b8ac.png",
     "static/media/introduction.md": "/AlgorithmVis/static/media/introduction.d1e583be8d4056298955.md",
@@ -9,6 +9,6 @@
   },
   "entrypoints": [
     "static/css/main.4c4c6b29.css",
-    "static/js/main.67bd4833.js"
+    "static/js/main.0deee17f.js"
   ]
 }
